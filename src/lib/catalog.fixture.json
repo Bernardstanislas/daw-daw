@@ -1,0 +1,5380 @@
+[
+  {
+    "kind": "instrument",
+    "typeId": "pulse",
+    "name": "Pulse Synth",
+    "category": "Synth",
+    "description": "Polyphonic virtual-analog synth: two oscillators with unison, sub and noise, a resonant multimode filter, two envelopes and an LFO.",
+    "params": [
+      {
+        "id": "osc1_wave",
+        "name": "Wave",
+        "min": 0.0,
+        "max": 3.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Saw",
+          "Square",
+          "Triangle",
+          "Sine"
+        ],
+        "group": "Osc 1"
+      },
+      {
+        "id": "osc1_oct",
+        "name": "Octave",
+        "min": -2.0,
+        "max": 2.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Osc 1"
+      },
+      {
+        "id": "osc1_semi",
+        "name": "Semi",
+        "min": -12.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Osc 1"
+      },
+      {
+        "id": "osc1_fine",
+        "name": "Fine",
+        "min": -50.0,
+        "max": 50.0,
+        "default": 0.0,
+        "unit": "ct",
+        "kind": "linear",
+        "choices": [],
+        "group": "Osc 1"
+      },
+      {
+        "id": "osc1_pw",
+        "name": "Pulse Width",
+        "min": 5.0,
+        "max": 95.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Osc 1"
+      },
+      {
+        "id": "osc1_level",
+        "name": "Level",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 80.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Osc 1"
+      },
+      {
+        "id": "osc2_wave",
+        "name": "Wave",
+        "min": 0.0,
+        "max": 3.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Saw",
+          "Square",
+          "Triangle",
+          "Sine"
+        ],
+        "group": "Osc 2"
+      },
+      {
+        "id": "osc2_oct",
+        "name": "Octave",
+        "min": -2.0,
+        "max": 2.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Osc 2"
+      },
+      {
+        "id": "osc2_semi",
+        "name": "Semi",
+        "min": -12.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Osc 2"
+      },
+      {
+        "id": "osc2_fine",
+        "name": "Fine",
+        "min": -50.0,
+        "max": 50.0,
+        "default": 7.0,
+        "unit": "ct",
+        "kind": "linear",
+        "choices": [],
+        "group": "Osc 2"
+      },
+      {
+        "id": "osc2_pw",
+        "name": "Pulse Width",
+        "min": 5.0,
+        "max": 95.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Osc 2"
+      },
+      {
+        "id": "osc2_level",
+        "name": "Level",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 55.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Osc 2"
+      },
+      {
+        "id": "sub_level",
+        "name": "Sub",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 20.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Mixer"
+      },
+      {
+        "id": "noise_level",
+        "name": "Noise",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Mixer"
+      },
+      {
+        "id": "unison",
+        "name": "Unison",
+        "min": 1.0,
+        "max": 4.0,
+        "default": 1.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Mixer"
+      },
+      {
+        "id": "uni_detune",
+        "name": "Detune",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 12.0,
+        "unit": "ct",
+        "kind": "linear",
+        "choices": [],
+        "group": "Mixer"
+      },
+      {
+        "id": "uni_spread",
+        "name": "Stereo",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 60.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Mixer"
+      },
+      {
+        "id": "flt_mode",
+        "name": "Mode",
+        "min": 0.0,
+        "max": 3.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "LP 24",
+          "LP 12",
+          "Band",
+          "High"
+        ],
+        "group": "Filter"
+      },
+      {
+        "id": "cutoff",
+        "name": "Cutoff",
+        "min": 20.0,
+        "max": 20000.0,
+        "default": 1800.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Filter"
+      },
+      {
+        "id": "resonance",
+        "name": "Resonance",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 15.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Filter"
+      },
+      {
+        "id": "key_track",
+        "name": "Key Track",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Filter"
+      },
+      {
+        "id": "env_amount",
+        "name": "Env Amount",
+        "min": -100.0,
+        "max": 100.0,
+        "default": 25.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Filter"
+      },
+      {
+        "id": "vel_cutoff",
+        "name": "Vel > Cutoff",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 30.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Filter"
+      },
+      {
+        "id": "drive",
+        "name": "Drive",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Filter"
+      },
+      {
+        "id": "fenv_attack",
+        "name": "Attack",
+        "min": 0.001,
+        "max": 10.0,
+        "default": 0.005,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Filter Env"
+      },
+      {
+        "id": "fenv_decay",
+        "name": "Decay",
+        "min": 0.005,
+        "max": 10.0,
+        "default": 0.6,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Filter Env"
+      },
+      {
+        "id": "fenv_sustain",
+        "name": "Sustain",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 40.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Filter Env"
+      },
+      {
+        "id": "fenv_release",
+        "name": "Release",
+        "min": 0.005,
+        "max": 10.0,
+        "default": 0.5,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Filter Env"
+      },
+      {
+        "id": "aenv_attack",
+        "name": "Attack",
+        "min": 0.001,
+        "max": 10.0,
+        "default": 0.01,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Amp Env"
+      },
+      {
+        "id": "aenv_decay",
+        "name": "Decay",
+        "min": 0.005,
+        "max": 10.0,
+        "default": 0.8,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Amp Env"
+      },
+      {
+        "id": "aenv_sustain",
+        "name": "Sustain",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 75.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Amp Env"
+      },
+      {
+        "id": "aenv_release",
+        "name": "Release",
+        "min": 0.005,
+        "max": 10.0,
+        "default": 0.45,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Amp Env"
+      },
+      {
+        "id": "vel_sens",
+        "name": "Velocity",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 60.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Amp Env"
+      },
+      {
+        "id": "lfo_shape",
+        "name": "Shape",
+        "min": 0.0,
+        "max": 4.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Sine",
+          "Triangle",
+          "Saw",
+          "Square",
+          "S&H"
+        ],
+        "group": "LFO"
+      },
+      {
+        "id": "lfo_sync",
+        "name": "Sync",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "LFO"
+      },
+      {
+        "id": "lfo_rate",
+        "name": "Rate",
+        "min": 0.05,
+        "max": 30.0,
+        "default": 4.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "LFO"
+      },
+      {
+        "id": "lfo_rate_sync",
+        "name": "Sync Rate",
+        "min": 0.0,
+        "max": 15.0,
+        "default": 8.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "1/32",
+          "1/16T",
+          "1/16",
+          "1/16D",
+          "1/8T",
+          "1/8",
+          "1/8D",
+          "1/4T",
+          "1/4",
+          "1/4D",
+          "1/2T",
+          "1/2",
+          "1/2D",
+          "1/1",
+          "2/1",
+          "4/1"
+        ],
+        "group": "LFO"
+      },
+      {
+        "id": "lfo_pitch",
+        "name": "> Pitch",
+        "min": 0.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "st",
+        "kind": "linear",
+        "choices": [],
+        "group": "LFO"
+      },
+      {
+        "id": "lfo_cutoff",
+        "name": "> Cutoff",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "LFO"
+      },
+      {
+        "id": "lfo_amp",
+        "name": "> Amp",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "LFO"
+      },
+      {
+        "id": "glide",
+        "name": "Glide",
+        "min": 1.0,
+        "max": 3000.0,
+        "default": 1.0,
+        "unit": "ms",
+        "kind": "log",
+        "choices": [],
+        "group": "Global"
+      },
+      {
+        "id": "mono",
+        "name": "Mono Legato",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Global"
+      },
+      {
+        "id": "volume",
+        "name": "Volume",
+        "min": -36.0,
+        "max": 6.0,
+        "default": -6.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Global"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Sunset Poly",
+        "values": []
+      },
+      {
+        "name": "Lead Weight Bass",
+        "values": [
+          [
+            "osc1_oct",
+            -1.0
+          ],
+          [
+            "osc2_wave",
+            1.0
+          ],
+          [
+            "osc2_oct",
+            -1.0
+          ],
+          [
+            "osc2_fine",
+            9.0
+          ],
+          [
+            "osc2_level",
+            60.0
+          ],
+          [
+            "sub_level",
+            60.0
+          ],
+          [
+            "cutoff",
+            260.0
+          ],
+          [
+            "resonance",
+            22.0
+          ],
+          [
+            "key_track",
+            30.0
+          ],
+          [
+            "env_amount",
+            45.0
+          ],
+          [
+            "fenv_attack",
+            0.001
+          ],
+          [
+            "fenv_decay",
+            0.35
+          ],
+          [
+            "fenv_sustain",
+            20.0
+          ],
+          [
+            "aenv_attack",
+            0.002
+          ],
+          [
+            "aenv_decay",
+            0.4
+          ],
+          [
+            "aenv_sustain",
+            90.0
+          ],
+          [
+            "aenv_release",
+            0.12
+          ],
+          [
+            "drive",
+            40.0
+          ],
+          [
+            "glide",
+            30.0
+          ],
+          [
+            "mono",
+            1.0
+          ],
+          [
+            "volume",
+            0.0
+          ]
+        ]
+      },
+      {
+        "name": "Basement Sub",
+        "values": [
+          [
+            "osc1_wave",
+            3.0
+          ],
+          [
+            "osc1_oct",
+            -1.0
+          ],
+          [
+            "osc1_level",
+            90.0
+          ],
+          [
+            "osc2_wave",
+            2.0
+          ],
+          [
+            "osc2_oct",
+            -1.0
+          ],
+          [
+            "osc2_fine",
+            0.0
+          ],
+          [
+            "osc2_level",
+            30.0
+          ],
+          [
+            "sub_level",
+            35.0
+          ],
+          [
+            "flt_mode",
+            1.0
+          ],
+          [
+            "cutoff",
+            420.0
+          ],
+          [
+            "resonance",
+            0.0
+          ],
+          [
+            "env_amount",
+            0.0
+          ],
+          [
+            "vel_cutoff",
+            0.0
+          ],
+          [
+            "aenv_attack",
+            0.003
+          ],
+          [
+            "aenv_sustain",
+            100.0
+          ],
+          [
+            "aenv_release",
+            0.1
+          ],
+          [
+            "vel_sens",
+            30.0
+          ],
+          [
+            "mono",
+            1.0
+          ]
+        ]
+      },
+      {
+        "name": "Squelch Machine",
+        "values": [
+          [
+            "osc1_oct",
+            -1.0
+          ],
+          [
+            "osc1_level",
+            90.0
+          ],
+          [
+            "osc2_level",
+            0.0
+          ],
+          [
+            "sub_level",
+            0.0
+          ],
+          [
+            "cutoff",
+            260.0
+          ],
+          [
+            "resonance",
+            82.0
+          ],
+          [
+            "key_track",
+            40.0
+          ],
+          [
+            "env_amount",
+            70.0
+          ],
+          [
+            "vel_cutoff",
+            60.0
+          ],
+          [
+            "drive",
+            55.0
+          ],
+          [
+            "fenv_attack",
+            0.001
+          ],
+          [
+            "fenv_decay",
+            0.22
+          ],
+          [
+            "fenv_sustain",
+            0.0
+          ],
+          [
+            "fenv_release",
+            0.1
+          ],
+          [
+            "aenv_attack",
+            0.001
+          ],
+          [
+            "aenv_decay",
+            0.3
+          ],
+          [
+            "aenv_sustain",
+            80.0
+          ],
+          [
+            "aenv_release",
+            0.06
+          ],
+          [
+            "glide",
+            70.0
+          ],
+          [
+            "mono",
+            1.0
+          ],
+          [
+            "volume",
+            -2.0
+          ]
+        ]
+      },
+      {
+        "name": "Glass Pluck",
+        "values": [
+          [
+            "osc2_wave",
+            1.0
+          ],
+          [
+            "osc2_oct",
+            1.0
+          ],
+          [
+            "osc2_level",
+            40.0
+          ],
+          [
+            "sub_level",
+            0.0
+          ],
+          [
+            "cutoff",
+            900.0
+          ],
+          [
+            "resonance",
+            25.0
+          ],
+          [
+            "env_amount",
+            60.0
+          ],
+          [
+            "fenv_attack",
+            0.001
+          ],
+          [
+            "fenv_decay",
+            0.25
+          ],
+          [
+            "fenv_sustain",
+            0.0
+          ],
+          [
+            "aenv_attack",
+            0.001
+          ],
+          [
+            "aenv_decay",
+            0.55
+          ],
+          [
+            "aenv_sustain",
+            0.0
+          ],
+          [
+            "aenv_release",
+            0.3
+          ],
+          [
+            "unison",
+            2.0
+          ],
+          [
+            "uni_detune",
+            8.0
+          ]
+        ]
+      },
+      {
+        "name": "Laser Lemon",
+        "values": [
+          [
+            "osc2_fine",
+            -12.0
+          ],
+          [
+            "osc2_level",
+            70.0
+          ],
+          [
+            "sub_level",
+            0.0
+          ],
+          [
+            "unison",
+            2.0
+          ],
+          [
+            "uni_detune",
+            15.0
+          ],
+          [
+            "cutoff",
+            3500.0
+          ],
+          [
+            "resonance",
+            25.0
+          ],
+          [
+            "env_amount",
+            30.0
+          ],
+          [
+            "fenv_decay",
+            0.4
+          ],
+          [
+            "aenv_attack",
+            0.003
+          ],
+          [
+            "aenv_sustain",
+            90.0
+          ],
+          [
+            "aenv_release",
+            0.2
+          ],
+          [
+            "lfo_rate",
+            5.5
+          ],
+          [
+            "lfo_pitch",
+            0.15
+          ],
+          [
+            "glide",
+            40.0
+          ],
+          [
+            "mono",
+            1.0
+          ]
+        ]
+      },
+      {
+        "name": "Hollow Whistle",
+        "values": [
+          [
+            "osc1_wave",
+            2.0
+          ],
+          [
+            "osc2_wave",
+            3.0
+          ],
+          [
+            "osc2_oct",
+            1.0
+          ],
+          [
+            "osc2_fine",
+            0.0
+          ],
+          [
+            "osc2_level",
+            30.0
+          ],
+          [
+            "sub_level",
+            0.0
+          ],
+          [
+            "noise_level",
+            4.0
+          ],
+          [
+            "flt_mode",
+            1.0
+          ],
+          [
+            "cutoff",
+            2500.0
+          ],
+          [
+            "resonance",
+            5.0
+          ],
+          [
+            "env_amount",
+            10.0
+          ],
+          [
+            "aenv_attack",
+            0.04
+          ],
+          [
+            "aenv_sustain",
+            85.0
+          ],
+          [
+            "aenv_release",
+            0.3
+          ],
+          [
+            "lfo_rate",
+            5.0
+          ],
+          [
+            "lfo_pitch",
+            0.12
+          ],
+          [
+            "glide",
+            60.0
+          ],
+          [
+            "mono",
+            1.0
+          ],
+          [
+            "volume",
+            -3.0
+          ]
+        ]
+      },
+      {
+        "name": "Amber Pad",
+        "values": [
+          [
+            "osc2_fine",
+            -9.0
+          ],
+          [
+            "osc2_level",
+            70.0
+          ],
+          [
+            "sub_level",
+            10.0
+          ],
+          [
+            "unison",
+            3.0
+          ],
+          [
+            "uni_detune",
+            18.0
+          ],
+          [
+            "uni_spread",
+            75.0
+          ],
+          [
+            "cutoff",
+            1200.0
+          ],
+          [
+            "resonance",
+            10.0
+          ],
+          [
+            "env_amount",
+            20.0
+          ],
+          [
+            "vel_cutoff",
+            15.0
+          ],
+          [
+            "fenv_attack",
+            1.2
+          ],
+          [
+            "fenv_decay",
+            2.0
+          ],
+          [
+            "fenv_sustain",
+            60.0
+          ],
+          [
+            "fenv_release",
+            1.5
+          ],
+          [
+            "aenv_attack",
+            0.8
+          ],
+          [
+            "aenv_decay",
+            1.0
+          ],
+          [
+            "aenv_sustain",
+            80.0
+          ],
+          [
+            "aenv_release",
+            1.8
+          ],
+          [
+            "vel_sens",
+            30.0
+          ],
+          [
+            "lfo_rate",
+            0.3
+          ],
+          [
+            "lfo_cutoff",
+            12.0
+          ]
+        ]
+      },
+      {
+        "name": "Silk Section",
+        "values": [
+          [
+            "osc2_fine",
+            11.0
+          ],
+          [
+            "osc2_level",
+            80.0
+          ],
+          [
+            "sub_level",
+            0.0
+          ],
+          [
+            "unison",
+            4.0
+          ],
+          [
+            "uni_detune",
+            12.0
+          ],
+          [
+            "uni_spread",
+            85.0
+          ],
+          [
+            "flt_mode",
+            1.0
+          ],
+          [
+            "cutoff",
+            3200.0
+          ],
+          [
+            "resonance",
+            5.0
+          ],
+          [
+            "env_amount",
+            0.0
+          ],
+          [
+            "aenv_attack",
+            0.35
+          ],
+          [
+            "aenv_decay",
+            1.0
+          ],
+          [
+            "aenv_sustain",
+            90.0
+          ],
+          [
+            "aenv_release",
+            0.9
+          ],
+          [
+            "vel_sens",
+            40.0
+          ],
+          [
+            "lfo_rate",
+            5.2
+          ],
+          [
+            "lfo_pitch",
+            0.08
+          ],
+          [
+            "volume",
+            -8.0
+          ]
+        ]
+      },
+      {
+        "name": "Bold Fanfare",
+        "values": [
+          [
+            "osc1_fine",
+            -8.0
+          ],
+          [
+            "osc2_fine",
+            8.0
+          ],
+          [
+            "osc2_level",
+            80.0
+          ],
+          [
+            "sub_level",
+            15.0
+          ],
+          [
+            "cutoff",
+            700.0
+          ],
+          [
+            "resonance",
+            12.0
+          ],
+          [
+            "env_amount",
+            55.0
+          ],
+          [
+            "vel_cutoff",
+            50.0
+          ],
+          [
+            "fenv_attack",
+            0.06
+          ],
+          [
+            "fenv_decay",
+            0.4
+          ],
+          [
+            "fenv_sustain",
+            45.0
+          ],
+          [
+            "fenv_release",
+            0.25
+          ],
+          [
+            "aenv_attack",
+            0.02
+          ],
+          [
+            "aenv_decay",
+            0.4
+          ],
+          [
+            "aenv_sustain",
+            70.0
+          ],
+          [
+            "aenv_release",
+            0.2
+          ],
+          [
+            "vel_sens",
+            70.0
+          ]
+        ]
+      },
+      {
+        "name": "Ice Chime",
+        "values": [
+          [
+            "osc1_wave",
+            3.0
+          ],
+          [
+            "osc2_wave",
+            3.0
+          ],
+          [
+            "osc2_oct",
+            2.0
+          ],
+          [
+            "osc2_semi",
+            3.0
+          ],
+          [
+            "osc2_fine",
+            -14.0
+          ],
+          [
+            "osc2_level",
+            45.0
+          ],
+          [
+            "sub_level",
+            0.0
+          ],
+          [
+            "flt_mode",
+            1.0
+          ],
+          [
+            "cutoff",
+            8000.0
+          ],
+          [
+            "resonance",
+            0.0
+          ],
+          [
+            "env_amount",
+            0.0
+          ],
+          [
+            "aenv_attack",
+            0.001
+          ],
+          [
+            "aenv_decay",
+            2.5
+          ],
+          [
+            "aenv_sustain",
+            0.0
+          ],
+          [
+            "aenv_release",
+            2.0
+          ],
+          [
+            "vel_sens",
+            70.0
+          ],
+          [
+            "unison",
+            2.0
+          ],
+          [
+            "uni_detune",
+            4.0
+          ]
+        ]
+      },
+      {
+        "name": "Pocket Arp",
+        "values": [
+          [
+            "osc1_wave",
+            1.0
+          ],
+          [
+            "osc1_pw",
+            30.0
+          ],
+          [
+            "osc2_oct",
+            1.0
+          ],
+          [
+            "osc2_level",
+            35.0
+          ],
+          [
+            "sub_level",
+            0.0
+          ],
+          [
+            "cutoff",
+            1500.0
+          ],
+          [
+            "resonance",
+            35.0
+          ],
+          [
+            "env_amount",
+            45.0
+          ],
+          [
+            "fenv_attack",
+            0.001
+          ],
+          [
+            "fenv_decay",
+            0.18
+          ],
+          [
+            "fenv_sustain",
+            10.0
+          ],
+          [
+            "aenv_attack",
+            0.001
+          ],
+          [
+            "aenv_decay",
+            0.25
+          ],
+          [
+            "aenv_sustain",
+            20.0
+          ],
+          [
+            "aenv_release",
+            0.15
+          ]
+        ]
+      },
+      {
+        "name": "Bit Hero",
+        "values": [
+          [
+            "osc1_wave",
+            1.0
+          ],
+          [
+            "osc1_pw",
+            25.0
+          ],
+          [
+            "osc2_level",
+            0.0
+          ],
+          [
+            "sub_level",
+            0.0
+          ],
+          [
+            "flt_mode",
+            1.0
+          ],
+          [
+            "cutoff",
+            20000.0
+          ],
+          [
+            "resonance",
+            0.0
+          ],
+          [
+            "key_track",
+            0.0
+          ],
+          [
+            "env_amount",
+            0.0
+          ],
+          [
+            "vel_cutoff",
+            0.0
+          ],
+          [
+            "aenv_attack",
+            0.001
+          ],
+          [
+            "aenv_decay",
+            0.1
+          ],
+          [
+            "aenv_sustain",
+            85.0
+          ],
+          [
+            "aenv_release",
+            0.05
+          ],
+          [
+            "vel_sens",
+            0.0
+          ],
+          [
+            "lfo_shape",
+            3.0
+          ],
+          [
+            "lfo_rate",
+            7.0
+          ],
+          [
+            "lfo_pitch",
+            0.0
+          ],
+          [
+            "mono",
+            1.0
+          ],
+          [
+            "volume",
+            -9.0
+          ]
+        ]
+      },
+      {
+        "name": "Wub Engine",
+        "values": [
+          [
+            "osc1_oct",
+            -1.0
+          ],
+          [
+            "osc2_wave",
+            1.0
+          ],
+          [
+            "osc2_oct",
+            -1.0
+          ],
+          [
+            "osc2_level",
+            70.0
+          ],
+          [
+            "sub_level",
+            50.0
+          ],
+          [
+            "cutoff",
+            200.0
+          ],
+          [
+            "resonance",
+            45.0
+          ],
+          [
+            "env_amount",
+            0.0
+          ],
+          [
+            "drive",
+            50.0
+          ],
+          [
+            "aenv_attack",
+            0.003
+          ],
+          [
+            "aenv_sustain",
+            100.0
+          ],
+          [
+            "aenv_release",
+            0.1
+          ],
+          [
+            "lfo_shape",
+            1.0
+          ],
+          [
+            "lfo_sync",
+            1.0
+          ],
+          [
+            "lfo_rate_sync",
+            5.0
+          ],
+          [
+            "lfo_cutoff",
+            70.0
+          ],
+          [
+            "mono",
+            1.0
+          ],
+          [
+            "volume",
+            0.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "instrument",
+    "typeId": "sampler",
+    "name": "Sampler",
+    "category": "Sampler",
+    "description": "Sampled instruments: pianos, strings, winds, guitars, organs and voices.",
+    "params": [
+      {
+        "id": "sound",
+        "name": "Sound",
+        "min": 0.0,
+        "max": 21.0,
+        "default": 21.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Strings",
+          "Clarinet",
+          "Cellos",
+          "Acoustic Guitar",
+          "Brass",
+          "Upright Piano",
+          "Vibraphone",
+          "Violins",
+          "Vox Ahh",
+          "Retro EP",
+          "Harp",
+          "Viola",
+          "Humming",
+          "Robbo",
+          "Shutter",
+          "Flute",
+          "Buzz Organ",
+          "Organ",
+          "Tine EP",
+          "Horns",
+          "Electric Guitar",
+          "Grand Piano"
+        ],
+        "group": "Sound"
+      },
+      {
+        "id": "attack",
+        "name": "Attack",
+        "min": 0.001,
+        "max": 5.0,
+        "default": 0.005,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Envelope"
+      },
+      {
+        "id": "decay",
+        "name": "Decay",
+        "min": 0.01,
+        "max": 10.0,
+        "default": 1.2,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Envelope"
+      },
+      {
+        "id": "sustain",
+        "name": "Sustain",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.55,
+        "unit": "",
+        "kind": "linear",
+        "choices": [],
+        "group": "Envelope"
+      },
+      {
+        "id": "release",
+        "name": "Release",
+        "min": 0.01,
+        "max": 10.0,
+        "default": 0.7,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Envelope"
+      },
+      {
+        "id": "tune",
+        "name": "Transpose",
+        "min": -24.0,
+        "max": 24.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Pitch"
+      },
+      {
+        "id": "fine",
+        "name": "Fine",
+        "min": -100.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "ct",
+        "kind": "linear",
+        "choices": [],
+        "group": "Pitch"
+      },
+      {
+        "id": "cutoff",
+        "name": "Tone",
+        "min": 200.0,
+        "max": 20000.0,
+        "default": 20000.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Tone"
+      },
+      {
+        "id": "vel_sens",
+        "name": "Velocity",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 70.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Tone"
+      },
+      {
+        "id": "loop",
+        "name": "Sustain loop",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 1.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Tone"
+      },
+      {
+        "id": "volume",
+        "name": "Volume",
+        "min": -24.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Tone"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Strings",
+        "values": [
+          [
+            "sound",
+            0.0
+          ],
+          [
+            "attack",
+            0.8
+          ],
+          [
+            "decay",
+            0.3
+          ],
+          [
+            "sustain",
+            0.8
+          ],
+          [
+            "release",
+            2.0
+          ]
+        ]
+      },
+      {
+        "name": "Clarinet",
+        "values": [
+          [
+            "sound",
+            1.0
+          ],
+          [
+            "attack",
+            0.025
+          ],
+          [
+            "decay",
+            0.26
+          ],
+          [
+            "sustain",
+            0.66
+          ],
+          [
+            "release",
+            0.05
+          ]
+        ]
+      },
+      {
+        "name": "Cellos",
+        "values": [
+          [
+            "sound",
+            2.0
+          ],
+          [
+            "attack",
+            0.8
+          ],
+          [
+            "decay",
+            0.3
+          ],
+          [
+            "sustain",
+            0.8
+          ],
+          [
+            "release",
+            2.0
+          ]
+        ]
+      },
+      {
+        "name": "Acoustic Guitar",
+        "values": [
+          [
+            "sound",
+            3.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            1.2
+          ],
+          [
+            "sustain",
+            0.55
+          ],
+          [
+            "release",
+            0.7
+          ]
+        ]
+      },
+      {
+        "name": "Brass",
+        "values": [
+          [
+            "sound",
+            4.0
+          ],
+          [
+            "attack",
+            0.025
+          ],
+          [
+            "decay",
+            0.26
+          ],
+          [
+            "sustain",
+            0.66
+          ],
+          [
+            "release",
+            0.05
+          ]
+        ]
+      },
+      {
+        "name": "Upright Piano",
+        "values": [
+          [
+            "sound",
+            5.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            1.2
+          ],
+          [
+            "sustain",
+            0.55
+          ],
+          [
+            "release",
+            0.7
+          ]
+        ]
+      },
+      {
+        "name": "Vibraphone",
+        "values": [
+          [
+            "sound",
+            6.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            1.2
+          ],
+          [
+            "sustain",
+            0.55
+          ],
+          [
+            "release",
+            0.7
+          ]
+        ]
+      },
+      {
+        "name": "Violins",
+        "values": [
+          [
+            "sound",
+            7.0
+          ],
+          [
+            "attack",
+            0.8
+          ],
+          [
+            "decay",
+            0.3
+          ],
+          [
+            "sustain",
+            0.8
+          ],
+          [
+            "release",
+            2.0
+          ]
+        ]
+      },
+      {
+        "name": "Vox Ahh",
+        "values": [
+          [
+            "sound",
+            8.0
+          ],
+          [
+            "attack",
+            0.8
+          ],
+          [
+            "decay",
+            0.3
+          ],
+          [
+            "sustain",
+            0.8
+          ],
+          [
+            "release",
+            2.0
+          ]
+        ]
+      },
+      {
+        "name": "Retro EP",
+        "values": [
+          [
+            "sound",
+            9.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            1.2
+          ],
+          [
+            "sustain",
+            0.55
+          ],
+          [
+            "release",
+            0.7
+          ]
+        ]
+      },
+      {
+        "name": "Harp",
+        "values": [
+          [
+            "sound",
+            10.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            1.2
+          ],
+          [
+            "sustain",
+            0.55
+          ],
+          [
+            "release",
+            0.7
+          ]
+        ]
+      },
+      {
+        "name": "Viola",
+        "values": [
+          [
+            "sound",
+            11.0
+          ],
+          [
+            "attack",
+            0.8
+          ],
+          [
+            "decay",
+            0.3
+          ],
+          [
+            "sustain",
+            0.8
+          ],
+          [
+            "release",
+            2.0
+          ]
+        ]
+      },
+      {
+        "name": "Humming",
+        "values": [
+          [
+            "sound",
+            12.0
+          ],
+          [
+            "attack",
+            0.8
+          ],
+          [
+            "decay",
+            0.3
+          ],
+          [
+            "sustain",
+            0.8
+          ],
+          [
+            "release",
+            2.0
+          ]
+        ]
+      },
+      {
+        "name": "Robbo",
+        "values": [
+          [
+            "sound",
+            13.0
+          ],
+          [
+            "attack",
+            0.025
+          ],
+          [
+            "decay",
+            0.26
+          ],
+          [
+            "sustain",
+            0.66
+          ],
+          [
+            "release",
+            0.05
+          ]
+        ]
+      },
+      {
+        "name": "Shutter",
+        "values": [
+          [
+            "sound",
+            14.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            0.08
+          ],
+          [
+            "sustain",
+            0.0
+          ],
+          [
+            "release",
+            0.18
+          ]
+        ]
+      },
+      {
+        "name": "Flute",
+        "values": [
+          [
+            "sound",
+            15.0
+          ],
+          [
+            "attack",
+            0.8
+          ],
+          [
+            "decay",
+            0.3
+          ],
+          [
+            "sustain",
+            0.8
+          ],
+          [
+            "release",
+            2.0
+          ]
+        ]
+      },
+      {
+        "name": "Buzz Organ",
+        "values": [
+          [
+            "sound",
+            16.0
+          ],
+          [
+            "attack",
+            0.025
+          ],
+          [
+            "decay",
+            0.26
+          ],
+          [
+            "sustain",
+            0.66
+          ],
+          [
+            "release",
+            0.05
+          ]
+        ]
+      },
+      {
+        "name": "Organ",
+        "values": [
+          [
+            "sound",
+            17.0
+          ],
+          [
+            "attack",
+            0.025
+          ],
+          [
+            "decay",
+            0.26
+          ],
+          [
+            "sustain",
+            0.66
+          ],
+          [
+            "release",
+            0.05
+          ]
+        ]
+      },
+      {
+        "name": "Tine EP",
+        "values": [
+          [
+            "sound",
+            18.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            1.2
+          ],
+          [
+            "sustain",
+            0.55
+          ],
+          [
+            "release",
+            0.7
+          ]
+        ]
+      },
+      {
+        "name": "Horns",
+        "values": [
+          [
+            "sound",
+            19.0
+          ],
+          [
+            "attack",
+            0.025
+          ],
+          [
+            "decay",
+            0.26
+          ],
+          [
+            "sustain",
+            0.66
+          ],
+          [
+            "release",
+            0.05
+          ]
+        ]
+      },
+      {
+        "name": "Electric Guitar",
+        "values": [
+          [
+            "sound",
+            20.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            1.2
+          ],
+          [
+            "sustain",
+            0.55
+          ],
+          [
+            "release",
+            0.7
+          ]
+        ]
+      },
+      {
+        "name": "Grand Piano",
+        "values": [
+          [
+            "sound",
+            21.0
+          ],
+          [
+            "attack",
+            0.005
+          ],
+          [
+            "decay",
+            1.2
+          ],
+          [
+            "sustain",
+            0.55
+          ],
+          [
+            "release",
+            0.7
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "instrument",
+    "typeId": "kit",
+    "name": "Drum Kit",
+    "category": "Drums",
+    "description": "Synthesized drum machine with four kit characters, GM drum mapping.",
+    "params": [
+      {
+        "id": "kit",
+        "name": "Kit",
+        "min": 0.0,
+        "max": 3.0,
+        "default": 1.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Boom",
+          "Punch",
+          "Dusty",
+          "Tiny"
+        ],
+        "group": "Kit"
+      },
+      {
+        "id": "kick_tune",
+        "name": "Tune",
+        "min": -12.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "st",
+        "kind": "linear",
+        "choices": [],
+        "group": "Kick"
+      },
+      {
+        "id": "kick_decay",
+        "name": "Decay",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Kick"
+      },
+      {
+        "id": "kick_punch",
+        "name": "Punch",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Kick"
+      },
+      {
+        "id": "snare_tune",
+        "name": "Tune",
+        "min": -12.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "st",
+        "kind": "linear",
+        "choices": [],
+        "group": "Snare"
+      },
+      {
+        "id": "snare_tone",
+        "name": "Snappy",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Snare"
+      },
+      {
+        "id": "snare_decay",
+        "name": "Decay",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Snare"
+      },
+      {
+        "id": "hat_tone",
+        "name": "Tone",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Hats"
+      },
+      {
+        "id": "hat_decay",
+        "name": "Decay",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Hats"
+      },
+      {
+        "id": "tom_tune",
+        "name": "Tune",
+        "min": -12.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "st",
+        "kind": "linear",
+        "choices": [],
+        "group": "Toms"
+      },
+      {
+        "id": "tom_decay",
+        "name": "Decay",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Toms"
+      },
+      {
+        "id": "cym_decay",
+        "name": "Decay",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Cymbals"
+      },
+      {
+        "id": "perc_tune",
+        "name": "Tune",
+        "min": -12.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "st",
+        "kind": "linear",
+        "choices": [],
+        "group": "Perc"
+      },
+      {
+        "id": "drive",
+        "name": "Drive",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Master"
+      },
+      {
+        "id": "level",
+        "name": "Level",
+        "min": -24.0,
+        "max": 6.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Master"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Boom Room",
+        "values": [
+          [
+            "kit",
+            0.0
+          ]
+        ]
+      },
+      {
+        "name": "Punch Card",
+        "values": [
+          [
+            "kit",
+            1.0
+          ]
+        ]
+      },
+      {
+        "name": "Dusty Crate",
+        "values": [
+          [
+            "kit",
+            2.0
+          ],
+          [
+            "drive",
+            25.0
+          ]
+        ]
+      },
+      {
+        "name": "Tiny Arcade",
+        "values": [
+          [
+            "kit",
+            3.0
+          ]
+        ]
+      },
+      {
+        "name": "Deep Thump",
+        "values": [
+          [
+            "kit",
+            0.0
+          ],
+          [
+            "kick_tune",
+            -3.0
+          ],
+          [
+            "kick_decay",
+            80.0
+          ],
+          [
+            "kick_punch",
+            30.0
+          ],
+          [
+            "drive",
+            35.0
+          ]
+        ]
+      },
+      {
+        "name": "Tight Box",
+        "values": [
+          [
+            "kit",
+            1.0
+          ],
+          [
+            "kick_decay",
+            25.0
+          ],
+          [
+            "kick_punch",
+            80.0
+          ],
+          [
+            "snare_tune",
+            3.0
+          ],
+          [
+            "snare_decay",
+            30.0
+          ],
+          [
+            "hat_decay",
+            30.0
+          ],
+          [
+            "tom_decay",
+            30.0
+          ],
+          [
+            "cym_decay",
+            30.0
+          ]
+        ]
+      },
+      {
+        "name": "Tape Basement",
+        "values": [
+          [
+            "kit",
+            2.0
+          ],
+          [
+            "kick_tune",
+            -2.0
+          ],
+          [
+            "snare_tone",
+            70.0
+          ],
+          [
+            "hat_tone",
+            30.0
+          ],
+          [
+            "cym_decay",
+            70.0
+          ],
+          [
+            "drive",
+            50.0
+          ],
+          [
+            "level",
+            -2.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": [
+      [
+        36,
+        "Kick"
+      ],
+      [
+        37,
+        "Rim"
+      ],
+      [
+        38,
+        "Snare"
+      ],
+      [
+        39,
+        "Clap"
+      ],
+      [
+        41,
+        "Low Tom"
+      ],
+      [
+        42,
+        "Closed Hat"
+      ],
+      [
+        44,
+        "Pedal Hat"
+      ],
+      [
+        45,
+        "Mid Tom"
+      ],
+      [
+        46,
+        "Open Hat"
+      ],
+      [
+        48,
+        "High Tom"
+      ],
+      [
+        49,
+        "Crash"
+      ],
+      [
+        51,
+        "Ride"
+      ],
+      [
+        54,
+        "Tambourine"
+      ],
+      [
+        56,
+        "Cowbell"
+      ],
+      [
+        75,
+        "Clave"
+      ]
+    ]
+  },
+  {
+    "kind": "instrument",
+    "typeId": "samplekit",
+    "name": "Sample Kit",
+    "category": "Drums",
+    "description": "TightKit: a sampled drum kit (kick, snare, clap, hats, tom, conga, shaker).",
+    "params": [
+      {
+        "id": "tune",
+        "name": "Tune",
+        "min": -12.0,
+        "max": 12.0,
+        "default": 0.34,
+        "unit": "st",
+        "kind": "linear",
+        "choices": [],
+        "group": "Kit"
+      },
+      {
+        "id": "decay",
+        "name": "Decay",
+        "min": 5.0,
+        "max": 100.0,
+        "default": 100.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Kit"
+      },
+      {
+        "id": "choke",
+        "name": "Hat choke",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 1.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Kit"
+      },
+      {
+        "id": "drive",
+        "name": "Drive",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Kit"
+      },
+      {
+        "id": "level",
+        "name": "Level",
+        "min": -24.0,
+        "max": 12.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Kit"
+      }
+    ],
+    "presets": [
+      {
+        "name": "TightKit",
+        "values": []
+      },
+      {
+        "name": "TightKit Short",
+        "values": [
+          [
+            "decay",
+            35.0
+          ]
+        ]
+      },
+      {
+        "name": "TightKit Low",
+        "values": [
+          [
+            "tune",
+            -3.0
+          ],
+          [
+            "drive",
+            25.0
+          ]
+        ]
+      },
+      {
+        "name": "TightKit Crunch",
+        "values": [
+          [
+            "drive",
+            70.0
+          ],
+          [
+            "level",
+            -4.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": [
+      [
+        36,
+        "Kick"
+      ],
+      [
+        38,
+        "Snare"
+      ],
+      [
+        39,
+        "Clap"
+      ],
+      [
+        41,
+        "Low Tom"
+      ],
+      [
+        42,
+        "Closed Hat"
+      ],
+      [
+        46,
+        "Open Hat"
+      ],
+      [
+        48,
+        "Conga"
+      ],
+      [
+        70,
+        "Shaker"
+      ]
+    ]
+  },
+  {
+    "kind": "instrument",
+    "typeId": "keys",
+    "name": "Keys",
+    "category": "Keys",
+    "description": "Electric piano, drawbar organ and soft piano in one instrument.",
+    "params": [
+      {
+        "id": "mode",
+        "name": "Mode",
+        "min": 0.0,
+        "max": 2.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Tine EP",
+          "Drawbar Organ",
+          "Soft Piano"
+        ],
+        "group": "Global"
+      },
+      {
+        "id": "tone",
+        "name": "Tone",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Global"
+      },
+      {
+        "id": "decay",
+        "name": "Decay",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Global"
+      },
+      {
+        "id": "release",
+        "name": "Release",
+        "min": 0.01,
+        "max": 3.0,
+        "default": 0.3,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Global"
+      },
+      {
+        "id": "vel_sens",
+        "name": "Velocity",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 70.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Global"
+      },
+      {
+        "id": "octave",
+        "name": "Octave",
+        "min": -2.0,
+        "max": 2.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Global"
+      },
+      {
+        "id": "trem_rate",
+        "name": "Rate",
+        "min": 0.5,
+        "max": 12.0,
+        "default": 4.5,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Tremolo"
+      },
+      {
+        "id": "trem_depth",
+        "name": "Depth",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Tremolo"
+      },
+      {
+        "id": "trem_pan",
+        "name": "Auto-Pan",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Tremolo"
+      },
+      {
+        "id": "volume",
+        "name": "Volume",
+        "min": -24.0,
+        "max": 6.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Global"
+      },
+      {
+        "id": "bark",
+        "name": "Bark",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Tine EP"
+      },
+      {
+        "id": "bell",
+        "name": "Bell",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 30.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Tine EP"
+      },
+      {
+        "id": "bar1",
+        "name": "16'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 8.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "bar2",
+        "name": "5 1/3'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 8.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "bar3",
+        "name": "8'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 8.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "bar4",
+        "name": "4'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "bar5",
+        "name": "2 2/3'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "bar6",
+        "name": "2'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "bar7",
+        "name": "1 3/5'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "bar8",
+        "name": "1 1/3'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "bar9",
+        "name": "1'",
+        "min": 0.0,
+        "max": 8.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "click",
+        "name": "Key Click",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 40.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Organ"
+      },
+      {
+        "id": "rotary",
+        "name": "Rotary",
+        "min": 0.0,
+        "max": 2.0,
+        "default": 1.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Off",
+          "Slow",
+          "Fast"
+        ],
+        "group": "Organ"
+      },
+      {
+        "id": "hammer",
+        "name": "Hammer",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 40.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Piano"
+      },
+      {
+        "id": "detune",
+        "name": "Detune",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 30.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Piano"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Velvet Tines",
+        "values": [
+          [
+            "mode",
+            0.0
+          ],
+          [
+            "tone",
+            40.0
+          ],
+          [
+            "bark",
+            35.0
+          ],
+          [
+            "bell",
+            25.0
+          ],
+          [
+            "trem_rate",
+            3.8
+          ],
+          [
+            "trem_depth",
+            35.0
+          ],
+          [
+            "trem_pan",
+            1.0
+          ]
+        ]
+      },
+      {
+        "name": "Bright Bark EP",
+        "values": [
+          [
+            "mode",
+            0.0
+          ],
+          [
+            "tone",
+            75.0
+          ],
+          [
+            "bark",
+            90.0
+          ],
+          [
+            "bell",
+            45.0
+          ],
+          [
+            "vel_sens",
+            85.0
+          ]
+        ]
+      },
+      {
+        "name": "Gospel Drawbars",
+        "values": [
+          [
+            "mode",
+            1.0
+          ],
+          [
+            "bar1",
+            8.0
+          ],
+          [
+            "bar2",
+            8.0
+          ],
+          [
+            "bar3",
+            8.0
+          ],
+          [
+            "bar4",
+            8.0
+          ],
+          [
+            "bar5",
+            0.0
+          ],
+          [
+            "bar6",
+            0.0
+          ],
+          [
+            "bar7",
+            0.0
+          ],
+          [
+            "bar8",
+            0.0
+          ],
+          [
+            "bar9",
+            8.0
+          ],
+          [
+            "click",
+            55.0
+          ],
+          [
+            "rotary",
+            2.0
+          ],
+          [
+            "vel_sens",
+            0.0
+          ],
+          [
+            "release",
+            0.04
+          ],
+          [
+            "volume",
+            -3.0
+          ]
+        ]
+      },
+      {
+        "name": "Jazz Organ",
+        "values": [
+          [
+            "mode",
+            1.0
+          ],
+          [
+            "bar1",
+            8.0
+          ],
+          [
+            "bar2",
+            8.0
+          ],
+          [
+            "bar3",
+            8.0
+          ],
+          [
+            "click",
+            70.0
+          ],
+          [
+            "rotary",
+            1.0
+          ],
+          [
+            "vel_sens",
+            0.0
+          ],
+          [
+            "release",
+            0.03
+          ]
+        ]
+      },
+      {
+        "name": "Chapel Flutes",
+        "values": [
+          [
+            "mode",
+            1.0
+          ],
+          [
+            "bar1",
+            0.0
+          ],
+          [
+            "bar2",
+            0.0
+          ],
+          [
+            "bar3",
+            8.0
+          ],
+          [
+            "bar4",
+            6.0
+          ],
+          [
+            "bar5",
+            0.0
+          ],
+          [
+            "bar6",
+            4.0
+          ],
+          [
+            "bar7",
+            0.0
+          ],
+          [
+            "bar8",
+            0.0
+          ],
+          [
+            "bar9",
+            0.0
+          ],
+          [
+            "click",
+            5.0
+          ],
+          [
+            "rotary",
+            0.0
+          ],
+          [
+            "vel_sens",
+            0.0
+          ],
+          [
+            "release",
+            0.4
+          ],
+          [
+            "tone",
+            35.0
+          ]
+        ]
+      },
+      {
+        "name": "Felt Upright",
+        "values": [
+          [
+            "mode",
+            2.0
+          ],
+          [
+            "tone",
+            25.0
+          ],
+          [
+            "hammer",
+            55.0
+          ],
+          [
+            "detune",
+            40.0
+          ],
+          [
+            "release",
+            0.35
+          ]
+        ]
+      },
+      {
+        "name": "Glass Grand",
+        "values": [
+          [
+            "mode",
+            2.0
+          ],
+          [
+            "tone",
+            80.0
+          ],
+          [
+            "hammer",
+            30.0
+          ],
+          [
+            "detune",
+            20.0
+          ],
+          [
+            "decay",
+            70.0
+          ]
+        ]
+      },
+      {
+        "name": "Music Box",
+        "values": [
+          [
+            "mode",
+            0.0
+          ],
+          [
+            "octave",
+            2.0
+          ],
+          [
+            "tone",
+            30.0
+          ],
+          [
+            "bark",
+            10.0
+          ],
+          [
+            "bell",
+            90.0
+          ],
+          [
+            "decay",
+            15.0
+          ],
+          [
+            "release",
+            0.6
+          ],
+          [
+            "vel_sens",
+            40.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "eq",
+    "name": "Channel EQ",
+    "category": "EQ",
+    "description": "Five-band channel equalizer: low/high cut, two shelves and a sweepable mid.",
+    "params": [
+      {
+        "id": "lowcut_on",
+        "name": "Low Cut",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Low Cut"
+      },
+      {
+        "id": "lowcut",
+        "name": "Low Cut Freq",
+        "min": 20.0,
+        "max": 1000.0,
+        "default": 80.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Low Cut"
+      },
+      {
+        "id": "low_freq",
+        "name": "Low Freq",
+        "min": 20.0,
+        "max": 1000.0,
+        "default": 120.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Low"
+      },
+      {
+        "id": "low_gain",
+        "name": "Low Gain",
+        "min": -18.0,
+        "max": 18.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Low"
+      },
+      {
+        "id": "mid_freq",
+        "name": "Mid Freq",
+        "min": 100.0,
+        "max": 10000.0,
+        "default": 1000.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Mid"
+      },
+      {
+        "id": "mid_gain",
+        "name": "Mid Gain",
+        "min": -18.0,
+        "max": 18.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Mid"
+      },
+      {
+        "id": "mid_q",
+        "name": "Mid Q",
+        "min": 0.1,
+        "max": 10.0,
+        "default": 0.9,
+        "unit": "",
+        "kind": "log",
+        "choices": [],
+        "group": "Mid"
+      },
+      {
+        "id": "high_freq",
+        "name": "High Freq",
+        "min": 1000.0,
+        "max": 20000.0,
+        "default": 6000.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "High"
+      },
+      {
+        "id": "high_gain",
+        "name": "High Gain",
+        "min": -18.0,
+        "max": 18.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "High"
+      },
+      {
+        "id": "highcut_on",
+        "name": "High Cut",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "High Cut"
+      },
+      {
+        "id": "highcut",
+        "name": "High Cut Freq",
+        "min": 1000.0,
+        "max": 20000.0,
+        "default": 16000.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "High Cut"
+      },
+      {
+        "id": "output",
+        "name": "Output",
+        "min": -24.0,
+        "max": 24.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Clean Up",
+        "values": [
+          [
+            "lowcut_on",
+            1.0
+          ],
+          [
+            "lowcut",
+            90.0
+          ],
+          [
+            "mid_freq",
+            350.0
+          ],
+          [
+            "mid_gain",
+            -3.0
+          ],
+          [
+            "mid_q",
+            1.2
+          ]
+        ]
+      },
+      {
+        "name": "Air Lift",
+        "values": [
+          [
+            "high_freq",
+            9000.0
+          ],
+          [
+            "high_gain",
+            4.5
+          ],
+          [
+            "mid_freq",
+            2500.0
+          ],
+          [
+            "mid_gain",
+            1.5
+          ],
+          [
+            "output",
+            -2.0
+          ]
+        ]
+      },
+      {
+        "name": "Warm Blanket",
+        "values": [
+          [
+            "low_freq",
+            180.0
+          ],
+          [
+            "low_gain",
+            3.0
+          ],
+          [
+            "high_gain",
+            -4.0
+          ],
+          [
+            "high_freq",
+            5000.0
+          ],
+          [
+            "highcut_on",
+            1.0
+          ],
+          [
+            "highcut",
+            11000.0
+          ],
+          [
+            "output",
+            -2.0
+          ]
+        ]
+      },
+      {
+        "name": "Telephone",
+        "values": [
+          [
+            "lowcut_on",
+            1.0
+          ],
+          [
+            "lowcut",
+            450.0
+          ],
+          [
+            "highcut_on",
+            1.0
+          ],
+          [
+            "highcut",
+            3200.0
+          ],
+          [
+            "mid_freq",
+            1500.0
+          ],
+          [
+            "mid_gain",
+            6.0
+          ],
+          [
+            "mid_q",
+            1.5
+          ],
+          [
+            "output",
+            -3.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "compressor",
+    "name": "Compressor",
+    "category": "Dynamics",
+    "description": "Stereo-linked compressor with soft knee and parallel mix.",
+    "params": [
+      {
+        "id": "threshold",
+        "name": "Threshold",
+        "min": -60.0,
+        "max": 0.0,
+        "default": -18.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Dynamics"
+      },
+      {
+        "id": "ratio",
+        "name": "Ratio",
+        "min": 1.0,
+        "max": 20.0,
+        "default": 4.0,
+        "unit": ":1",
+        "kind": "log",
+        "choices": [],
+        "group": "Dynamics"
+      },
+      {
+        "id": "attack",
+        "name": "Attack",
+        "min": 0.1,
+        "max": 100.0,
+        "default": 10.0,
+        "unit": "ms",
+        "kind": "log",
+        "choices": [],
+        "group": "Timing"
+      },
+      {
+        "id": "release",
+        "name": "Release",
+        "min": 10.0,
+        "max": 1000.0,
+        "default": 120.0,
+        "unit": "ms",
+        "kind": "log",
+        "choices": [],
+        "group": "Timing"
+      },
+      {
+        "id": "knee",
+        "name": "Knee",
+        "min": 0.0,
+        "max": 24.0,
+        "default": 6.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Dynamics"
+      },
+      {
+        "id": "makeup",
+        "name": "Makeup",
+        "min": 0.0,
+        "max": 24.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      },
+      {
+        "id": "mix",
+        "name": "Mix",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 100.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Gentle Glue",
+        "values": [
+          [
+            "threshold",
+            -14.0
+          ],
+          [
+            "ratio",
+            2.0
+          ],
+          [
+            "attack",
+            30.0
+          ],
+          [
+            "release",
+            200.0
+          ],
+          [
+            "knee",
+            10.0
+          ],
+          [
+            "makeup",
+            2.0
+          ]
+        ]
+      },
+      {
+        "name": "Vocal Leveler",
+        "values": [
+          [
+            "threshold",
+            -22.0
+          ],
+          [
+            "ratio",
+            4.0
+          ],
+          [
+            "attack",
+            5.0
+          ],
+          [
+            "release",
+            90.0
+          ],
+          [
+            "knee",
+            6.0
+          ],
+          [
+            "makeup",
+            6.0
+          ]
+        ]
+      },
+      {
+        "name": "Drum Smash",
+        "values": [
+          [
+            "threshold",
+            -30.0
+          ],
+          [
+            "ratio",
+            12.0
+          ],
+          [
+            "attack",
+            1.0
+          ],
+          [
+            "release",
+            60.0
+          ],
+          [
+            "knee",
+            2.0
+          ],
+          [
+            "makeup",
+            10.0
+          ],
+          [
+            "mix",
+            45.0
+          ]
+        ]
+      },
+      {
+        "name": "Bass Tamer",
+        "values": [
+          [
+            "threshold",
+            -20.0
+          ],
+          [
+            "ratio",
+            6.0
+          ],
+          [
+            "attack",
+            15.0
+          ],
+          [
+            "release",
+            150.0
+          ],
+          [
+            "knee",
+            4.0
+          ],
+          [
+            "makeup",
+            5.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "delay",
+    "name": "Echo",
+    "category": "Delay",
+    "description": "Tempo-synced stereo / ping-pong echo with filtered feedback.",
+    "params": [
+      {
+        "id": "sync",
+        "name": "Sync",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 1.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Time"
+      },
+      {
+        "id": "time_sync",
+        "name": "Note",
+        "min": 0.0,
+        "max": 15.0,
+        "default": 6.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "1/32",
+          "1/16T",
+          "1/16",
+          "1/16D",
+          "1/8T",
+          "1/8",
+          "1/8D",
+          "1/4T",
+          "1/4",
+          "1/4D",
+          "1/2T",
+          "1/2",
+          "1/2D",
+          "1/1",
+          "2/1",
+          "4/1"
+        ],
+        "group": "Time"
+      },
+      {
+        "id": "time_ms",
+        "name": "Time",
+        "min": 1.0,
+        "max": 2000.0,
+        "default": 350.0,
+        "unit": "ms",
+        "kind": "log",
+        "choices": [],
+        "group": "Time"
+      },
+      {
+        "id": "feedback",
+        "name": "Feedback",
+        "min": 0.0,
+        "max": 95.0,
+        "default": 35.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Feedback"
+      },
+      {
+        "id": "pingpong",
+        "name": "Ping-Pong",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Feedback"
+      },
+      {
+        "id": "lowcut",
+        "name": "Low Cut",
+        "min": 20.0,
+        "max": 2000.0,
+        "default": 120.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Feedback"
+      },
+      {
+        "id": "highcut",
+        "name": "High Cut",
+        "min": 500.0,
+        "max": 20000.0,
+        "default": 6000.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Feedback"
+      },
+      {
+        "id": "mix",
+        "name": "Mix",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 30.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Slapback",
+        "values": [
+          [
+            "sync",
+            0.0
+          ],
+          [
+            "time_ms",
+            95.0
+          ],
+          [
+            "feedback",
+            10.0
+          ],
+          [
+            "highcut",
+            4500.0
+          ],
+          [
+            "mix",
+            30.0
+          ]
+        ]
+      },
+      {
+        "name": "Dotted Bounce",
+        "values": [
+          [
+            "sync",
+            1.0
+          ],
+          [
+            "time_sync",
+            6.0
+          ],
+          [
+            "feedback",
+            45.0
+          ],
+          [
+            "pingpong",
+            1.0
+          ],
+          [
+            "mix",
+            28.0
+          ]
+        ]
+      },
+      {
+        "name": "Worn Tape",
+        "values": [
+          [
+            "sync",
+            1.0
+          ],
+          [
+            "time_sync",
+            8.0
+          ],
+          [
+            "feedback",
+            60.0
+          ],
+          [
+            "lowcut",
+            300.0
+          ],
+          [
+            "highcut",
+            2200.0
+          ],
+          [
+            "mix",
+            35.0
+          ]
+        ]
+      },
+      {
+        "name": "Canyon",
+        "values": [
+          [
+            "sync",
+            0.0
+          ],
+          [
+            "time_ms",
+            900.0
+          ],
+          [
+            "feedback",
+            70.0
+          ],
+          [
+            "pingpong",
+            1.0
+          ],
+          [
+            "highcut",
+            5000.0
+          ],
+          [
+            "mix",
+            30.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "reverb",
+    "name": "Space",
+    "category": "Reverb",
+    "description": "Lush algorithmic reverb, from small rooms to endless washes.",
+    "params": [
+      {
+        "id": "size",
+        "name": "Size",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Room"
+      },
+      {
+        "id": "decay",
+        "name": "Decay",
+        "min": 0.2,
+        "max": 20.0,
+        "default": 2.0,
+        "unit": "s",
+        "kind": "log",
+        "choices": [],
+        "group": "Room"
+      },
+      {
+        "id": "damping",
+        "name": "Damping",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Room"
+      },
+      {
+        "id": "predelay",
+        "name": "Pre-Delay",
+        "min": 0.0,
+        "max": 250.0,
+        "default": 10.0,
+        "unit": "ms",
+        "kind": "linear",
+        "choices": [],
+        "group": "Room"
+      },
+      {
+        "id": "width",
+        "name": "Width",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 100.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      },
+      {
+        "id": "lowcut",
+        "name": "Low Cut",
+        "min": 20.0,
+        "max": 1000.0,
+        "default": 100.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Output"
+      },
+      {
+        "id": "mix",
+        "name": "Mix",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 25.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Small Room",
+        "values": [
+          [
+            "size",
+            18.0
+          ],
+          [
+            "decay",
+            0.6
+          ],
+          [
+            "damping",
+            60.0
+          ],
+          [
+            "predelay",
+            3.0
+          ],
+          [
+            "mix",
+            20.0
+          ]
+        ]
+      },
+      {
+        "name": "Vocal Plate",
+        "values": [
+          [
+            "size",
+            45.0
+          ],
+          [
+            "decay",
+            1.8
+          ],
+          [
+            "damping",
+            25.0
+          ],
+          [
+            "predelay",
+            25.0
+          ],
+          [
+            "lowcut",
+            200.0
+          ],
+          [
+            "mix",
+            22.0
+          ]
+        ]
+      },
+      {
+        "name": "Big Hall",
+        "values": [
+          [
+            "size",
+            85.0
+          ],
+          [
+            "decay",
+            4.5
+          ],
+          [
+            "damping",
+            45.0
+          ],
+          [
+            "predelay",
+            30.0
+          ],
+          [
+            "mix",
+            28.0
+          ]
+        ]
+      },
+      {
+        "name": "Endless",
+        "values": [
+          [
+            "size",
+            100.0
+          ],
+          [
+            "decay",
+            20.0
+          ],
+          [
+            "damping",
+            35.0
+          ],
+          [
+            "predelay",
+            60.0
+          ],
+          [
+            "lowcut",
+            150.0
+          ],
+          [
+            "mix",
+            35.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "chorus",
+    "name": "Chorus",
+    "category": "Modulation",
+    "description": "Stereo chorus with feedback, from subtle shimmer to seasick flange.",
+    "params": [
+      {
+        "id": "rate",
+        "name": "Rate",
+        "min": 0.05,
+        "max": 5.0,
+        "default": 0.6,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "depth",
+        "name": "Depth",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "delay",
+        "name": "Delay",
+        "min": 1.0,
+        "max": 30.0,
+        "default": 8.0,
+        "unit": "ms",
+        "kind": "log",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "feedback",
+        "name": "Feedback",
+        "min": -90.0,
+        "max": 90.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "mix",
+        "name": "Mix",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Silk Doubler",
+        "values": [
+          [
+            "rate",
+            0.35
+          ],
+          [
+            "depth",
+            30.0
+          ],
+          [
+            "delay",
+            12.0
+          ],
+          [
+            "mix",
+            40.0
+          ]
+        ]
+      },
+      {
+        "name": "Eighties Shimmer",
+        "values": [
+          [
+            "rate",
+            0.9
+          ],
+          [
+            "depth",
+            60.0
+          ],
+          [
+            "delay",
+            7.0
+          ],
+          [
+            "mix",
+            50.0
+          ]
+        ]
+      },
+      {
+        "name": "Jet Wash",
+        "values": [
+          [
+            "rate",
+            0.15
+          ],
+          [
+            "depth",
+            70.0
+          ],
+          [
+            "delay",
+            2.0
+          ],
+          [
+            "feedback",
+            70.0
+          ],
+          [
+            "mix",
+            50.0
+          ]
+        ]
+      },
+      {
+        "name": "Wobble Tape",
+        "values": [
+          [
+            "rate",
+            3.5
+          ],
+          [
+            "depth",
+            25.0
+          ],
+          [
+            "delay",
+            5.0
+          ],
+          [
+            "mix",
+            35.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "phaser",
+    "name": "Phaser",
+    "category": "Modulation",
+    "description": "Swirling 4/6/8-stage stereo phaser with feedback.",
+    "params": [
+      {
+        "id": "rate",
+        "name": "Rate",
+        "min": 0.02,
+        "max": 10.0,
+        "default": 0.4,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "depth",
+        "name": "Depth",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 70.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "stages",
+        "name": "Stages",
+        "min": 0.0,
+        "max": 2.0,
+        "default": 1.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "4",
+          "6",
+          "8"
+        ],
+        "group": "Modulation"
+      },
+      {
+        "id": "feedback",
+        "name": "Feedback",
+        "min": -90.0,
+        "max": 90.0,
+        "default": 40.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "center",
+        "name": "Center",
+        "min": 100.0,
+        "max": 4000.0,
+        "default": 700.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "mix",
+        "name": "Mix",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Slow Swirl",
+        "values": [
+          [
+            "rate",
+            0.15
+          ],
+          [
+            "depth",
+            80.0
+          ],
+          [
+            "stages",
+            1.0
+          ],
+          [
+            "feedback",
+            30.0
+          ]
+        ]
+      },
+      {
+        "name": "Liquid Keys",
+        "values": [
+          [
+            "rate",
+            0.6
+          ],
+          [
+            "depth",
+            60.0
+          ],
+          [
+            "stages",
+            0.0
+          ],
+          [
+            "feedback",
+            55.0
+          ],
+          [
+            "center",
+            900.0
+          ]
+        ]
+      },
+      {
+        "name": "Laser Sweep",
+        "values": [
+          [
+            "rate",
+            2.5
+          ],
+          [
+            "depth",
+            90.0
+          ],
+          [
+            "stages",
+            2.0
+          ],
+          [
+            "feedback",
+            80.0
+          ],
+          [
+            "center",
+            1200.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "drive",
+    "name": "Drive",
+    "category": "Distortion",
+    "description": "Saturation, clipping, fuzz and bitcrushing with a tone control.",
+    "params": [
+      {
+        "id": "drive",
+        "name": "Drive",
+        "min": 0.0,
+        "max": 48.0,
+        "default": 12.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Drive"
+      },
+      {
+        "id": "type",
+        "name": "Type",
+        "min": 0.0,
+        "max": 4.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Soft",
+          "Hard",
+          "Tube",
+          "Fuzz",
+          "Bitcrush"
+        ],
+        "group": "Drive"
+      },
+      {
+        "id": "tone",
+        "name": "Tone",
+        "min": 500.0,
+        "max": 20000.0,
+        "default": 9000.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Drive"
+      },
+      {
+        "id": "bits",
+        "name": "Bits",
+        "min": 1.0,
+        "max": 16.0,
+        "default": 8.0,
+        "unit": "",
+        "kind": "int",
+        "choices": [],
+        "group": "Bitcrush"
+      },
+      {
+        "id": "downsample",
+        "name": "Downsample",
+        "min": 1.0,
+        "max": 50.0,
+        "default": 1.0,
+        "unit": "x",
+        "kind": "linear",
+        "choices": [],
+        "group": "Bitcrush"
+      },
+      {
+        "id": "output",
+        "name": "Output",
+        "min": -24.0,
+        "max": 12.0,
+        "default": -6.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      },
+      {
+        "id": "mix",
+        "name": "Mix",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 100.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Warm Saturation",
+        "values": [
+          [
+            "drive",
+            8.0
+          ],
+          [
+            "type",
+            2.0
+          ],
+          [
+            "tone",
+            12000.0
+          ],
+          [
+            "output",
+            -2.0
+          ]
+        ]
+      },
+      {
+        "name": "Crunch Box",
+        "values": [
+          [
+            "drive",
+            22.0
+          ],
+          [
+            "type",
+            1.0
+          ],
+          [
+            "tone",
+            5000.0
+          ],
+          [
+            "output",
+            -8.0
+          ]
+        ]
+      },
+      {
+        "name": "Buzzsaw Fuzz",
+        "values": [
+          [
+            "drive",
+            30.0
+          ],
+          [
+            "type",
+            3.0
+          ],
+          [
+            "tone",
+            3500.0
+          ],
+          [
+            "output",
+            -9.0
+          ]
+        ]
+      },
+      {
+        "name": "Eight-Bit Grit",
+        "values": [
+          [
+            "drive",
+            3.0
+          ],
+          [
+            "type",
+            4.0
+          ],
+          [
+            "bits",
+            6.0
+          ],
+          [
+            "downsample",
+            6.0
+          ],
+          [
+            "tone",
+            12000.0
+          ],
+          [
+            "output",
+            -3.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "filter",
+    "name": "Auto Filter",
+    "category": "Filter",
+    "description": "Resonant filter swept by a tempo-syncable LFO and an envelope follower.",
+    "params": [
+      {
+        "id": "mode",
+        "name": "Mode",
+        "min": 0.0,
+        "max": 2.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Low Pass",
+          "Band Pass",
+          "High Pass"
+        ],
+        "group": "Filter"
+      },
+      {
+        "id": "cutoff",
+        "name": "Cutoff",
+        "min": 20.0,
+        "max": 20000.0,
+        "default": 1200.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Filter"
+      },
+      {
+        "id": "resonance",
+        "name": "Resonance",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 40.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Filter"
+      },
+      {
+        "id": "sync",
+        "name": "Sync",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "LFO"
+      },
+      {
+        "id": "rate",
+        "name": "Rate",
+        "min": 0.05,
+        "max": 20.0,
+        "default": 1.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "LFO"
+      },
+      {
+        "id": "rate_sync",
+        "name": "Note",
+        "min": 0.0,
+        "max": 15.0,
+        "default": 8.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "1/32",
+          "1/16T",
+          "1/16",
+          "1/16D",
+          "1/8T",
+          "1/8",
+          "1/8D",
+          "1/4T",
+          "1/4",
+          "1/4D",
+          "1/2T",
+          "1/2",
+          "1/2D",
+          "1/1",
+          "2/1",
+          "4/1"
+        ],
+        "group": "LFO"
+      },
+      {
+        "id": "shape",
+        "name": "Shape",
+        "min": 0.0,
+        "max": 4.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Sine",
+          "Triangle",
+          "Saw",
+          "Square",
+          "S&H"
+        ],
+        "group": "LFO"
+      },
+      {
+        "id": "depth",
+        "name": "LFO Depth",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 40.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "LFO"
+      },
+      {
+        "id": "env",
+        "name": "Envelope",
+        "min": -100.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Envelope"
+      },
+      {
+        "id": "mix",
+        "name": "Mix",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 100.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Slow Breather",
+        "values": [
+          [
+            "cutoff",
+            900.0
+          ],
+          [
+            "resonance",
+            35.0
+          ],
+          [
+            "rate",
+            0.2
+          ],
+          [
+            "depth",
+            60.0
+          ]
+        ]
+      },
+      {
+        "name": "Sixteenth Gate",
+        "values": [
+          [
+            "cutoff",
+            600.0
+          ],
+          [
+            "resonance",
+            55.0
+          ],
+          [
+            "sync",
+            1.0
+          ],
+          [
+            "rate_sync",
+            2.0
+          ],
+          [
+            "shape",
+            3.0
+          ],
+          [
+            "depth",
+            70.0
+          ]
+        ]
+      },
+      {
+        "name": "Funky Wah",
+        "values": [
+          [
+            "mode",
+            1.0
+          ],
+          [
+            "cutoff",
+            450.0
+          ],
+          [
+            "resonance",
+            70.0
+          ],
+          [
+            "depth",
+            0.0
+          ],
+          [
+            "env",
+            80.0
+          ]
+        ]
+      },
+      {
+        "name": "Random Steps",
+        "values": [
+          [
+            "cutoff",
+            1500.0
+          ],
+          [
+            "resonance",
+            50.0
+          ],
+          [
+            "sync",
+            1.0
+          ],
+          [
+            "rate_sync",
+            5.0
+          ],
+          [
+            "shape",
+            4.0
+          ],
+          [
+            "depth",
+            55.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "limiter",
+    "name": "Limiter",
+    "category": "Dynamics",
+    "description": "Transparent lookahead brickwall limiter (3 ms latency).",
+    "params": [
+      {
+        "id": "input",
+        "name": "Input Gain",
+        "min": -12.0,
+        "max": 24.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Limiter"
+      },
+      {
+        "id": "ceiling",
+        "name": "Ceiling",
+        "min": -24.0,
+        "max": 0.0,
+        "default": -0.3,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Limiter"
+      },
+      {
+        "id": "release",
+        "name": "Release",
+        "min": 10.0,
+        "max": 1000.0,
+        "default": 100.0,
+        "unit": "ms",
+        "kind": "log",
+        "choices": [],
+        "group": "Limiter"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Safety Net",
+        "values": [
+          [
+            "input",
+            0.0
+          ],
+          [
+            "ceiling",
+            -0.3
+          ],
+          [
+            "release",
+            150.0
+          ]
+        ]
+      },
+      {
+        "name": "Loud and Proud",
+        "values": [
+          [
+            "input",
+            8.0
+          ],
+          [
+            "ceiling",
+            -0.5
+          ],
+          [
+            "release",
+            60.0
+          ]
+        ]
+      },
+      {
+        "name": "Gentle Master",
+        "values": [
+          [
+            "input",
+            3.0
+          ],
+          [
+            "ceiling",
+            -1.0
+          ],
+          [
+            "release",
+            300.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "width",
+    "name": "Stereo Width",
+    "category": "Utility",
+    "description": "Stereo width, balance, gain, polarity and mono utility.",
+    "params": [
+      {
+        "id": "width",
+        "name": "Width",
+        "min": 0.0,
+        "max": 200.0,
+        "default": 100.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Stereo"
+      },
+      {
+        "id": "gain",
+        "name": "Gain",
+        "min": -24.0,
+        "max": 24.0,
+        "default": 0.0,
+        "unit": "dB",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      },
+      {
+        "id": "pan",
+        "name": "Pan",
+        "min": -100.0,
+        "max": 100.0,
+        "default": 0.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Output"
+      },
+      {
+        "id": "invert_l",
+        "name": "Invert L",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Polarity"
+      },
+      {
+        "id": "invert_r",
+        "name": "Invert R",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Polarity"
+      },
+      {
+        "id": "mono",
+        "name": "Mono",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Stereo"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Mono Check",
+        "values": [
+          [
+            "mono",
+            1.0
+          ]
+        ]
+      },
+      {
+        "name": "Extra Wide",
+        "values": [
+          [
+            "width",
+            160.0
+          ],
+          [
+            "gain",
+            -1.5
+          ]
+        ]
+      },
+      {
+        "name": "Narrow Focus",
+        "values": [
+          [
+            "width",
+            50.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  },
+  {
+    "kind": "effect",
+    "typeId": "tremolo",
+    "name": "Tremolo",
+    "category": "Modulation",
+    "description": "Amplitude tremolo and auto-pan, free running or tempo-synced.",
+    "params": [
+      {
+        "id": "rate",
+        "name": "Rate",
+        "min": 0.1,
+        "max": 20.0,
+        "default": 4.0,
+        "unit": "Hz",
+        "kind": "log",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "sync",
+        "name": "Sync",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "rate_sync",
+        "name": "Note",
+        "min": 0.0,
+        "max": 15.0,
+        "default": 5.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "1/32",
+          "1/16T",
+          "1/16",
+          "1/16D",
+          "1/8T",
+          "1/8",
+          "1/8D",
+          "1/4T",
+          "1/4",
+          "1/4D",
+          "1/2T",
+          "1/2",
+          "1/2D",
+          "1/1",
+          "2/1",
+          "4/1"
+        ],
+        "group": "Modulation"
+      },
+      {
+        "id": "depth",
+        "name": "Depth",
+        "min": 0.0,
+        "max": 100.0,
+        "default": 50.0,
+        "unit": "%",
+        "kind": "linear",
+        "choices": [],
+        "group": "Modulation"
+      },
+      {
+        "id": "shape",
+        "name": "Shape",
+        "min": 0.0,
+        "max": 4.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "choice",
+        "choices": [
+          "Sine",
+          "Triangle",
+          "Saw",
+          "Square",
+          "S&H"
+        ],
+        "group": "Modulation"
+      },
+      {
+        "id": "stereo",
+        "name": "Auto-Pan",
+        "min": 0.0,
+        "max": 1.0,
+        "default": 0.0,
+        "unit": "",
+        "kind": "toggle",
+        "choices": [],
+        "group": "Modulation"
+      }
+    ],
+    "presets": [
+      {
+        "name": "Amp Shimmer",
+        "values": [
+          [
+            "rate",
+            5.5
+          ],
+          [
+            "depth",
+            45.0
+          ],
+          [
+            "shape",
+            1.0
+          ]
+        ]
+      },
+      {
+        "name": "Slow Pan",
+        "values": [
+          [
+            "rate",
+            0.3
+          ],
+          [
+            "depth",
+            80.0
+          ],
+          [
+            "stereo",
+            1.0
+          ]
+        ]
+      },
+      {
+        "name": "Helicopter Chop",
+        "values": [
+          [
+            "sync",
+            1.0
+          ],
+          [
+            "rate_sync",
+            2.0
+          ],
+          [
+            "depth",
+            100.0
+          ],
+          [
+            "shape",
+            3.0
+          ]
+        ]
+      }
+    ],
+    "noteNames": []
+  }
+]
