@@ -1,0 +1,26 @@
+[package]
+name = "daw-core"
+version = "0.1.0"
+edition = "2024"
+description = "daw-daw audio engine: sequencer, mixer, instruments, effects (no UI, no OS audio)."
+
+[features]
+default = ["decode"]
+# Audio file decoding (WAV/MP3/FLAC/OGG/AIFF/M4A). Off for the WebAssembly build,
+# where the browser decodes files itself.
+decode = ["dep:symphonia"]
+
+[dependencies]
+anyhow = "1"
+hound = "3.5"
+rtrb = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+symphonia = { version = "0.6.1", features = ["all"], optional = true }
+
+[profile.dev]
+debug = 0
+opt-level = 1
+
+[profile.dev.package."*"]
+opt-level = 2
