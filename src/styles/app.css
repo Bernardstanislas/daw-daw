@@ -1557,25 +1557,8 @@ input:focus {
   color: var(--text-1);
 }
 
-/* ------------------------------------------------------------------ inspector */
+/* ------------------------------------------------------------------ sections, fields, devices */
 
-.inspector-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px 8px 30px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-.inspector-section {
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  padding: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
 .section-title {
   display: flex;
   align-items: center;
@@ -1585,26 +1568,11 @@ input:focus {
   font-weight: 600;
   color: var(--text-1);
 }
-.track-summary-head {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.track-summary .swatch {
-  width: 12px;
-  height: 24px;
-}
 .knob-row {
   display: flex;
   align-items: flex-start;
   gap: 14px;
   padding: 2px 4px;
-}
-.flag-col {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  margin-left: auto;
 }
 .field-row {
   display: flex;
@@ -2142,9 +2110,6 @@ kbd {
 }
 .panel-resizer.left {
   right: -4px;
-}
-.panel-resizer.right {
-  left: -4px;
 }
 .panel-resizer:hover,
 body.resizing-x .panel-resizer {
@@ -3092,7 +3057,7 @@ select {
   background: var(--accent);
 }
 
-/* ---------------------------------------------------------------- panels, browser, inspector */
+/* ---------------------------------------------------------------- panels, browser, devices */
 
 .panel-tab {
   height: 36px;
@@ -3132,17 +3097,6 @@ select {
   color: var(--text-2);
 }
 
-.inspector-body {
-  padding: 4px 12px 32px;
-  gap: 0;
-}
-.inspector-section {
-  background: none;
-  border: none;
-  border-bottom: 1px solid var(--line);
-  border-radius: 0;
-  padding: 16px 0;
-}
 .section-title {
   font-size: 11px;
   font-weight: 500;
@@ -3844,7 +3798,6 @@ input.text-input.title.tape:focus {
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.45);
 }
 /* Track color shown as a colored lamp, not a block. */
-.track-summary .swatch,
 .editor-title .swatch {
   width: 10px;
   height: 10px;
@@ -3854,10 +3807,6 @@ input.text-input.title.tape:focus {
     inset 0 1px 0 rgba(255, 255, 255, 0.45),
     0 0 0 1px rgba(0, 0, 0, 0.6),
     0 0 0 3px #101011;
-}
-.track-summary-head {
-  gap: 12px;
-  padding-left: 4px;
 }
 /* Piano keyboard: black keys sit on top of the ivory, like a real keybed. */
 .pr-key.black {
@@ -3915,3 +3864,476 @@ input.text-input.title.tape:focus {
   background: linear-gradient(#ece6d6, #ddd5c1);
   padding-left: 8px;
 }
+
+/* ======================================================================
+   Pages — Arrange · Sound · Mix
+   One full-window workspace per stage of the work; the selector sits at
+   the bottom centre of the window.
+   ====================================================================== */
+
+.app {
+  grid-template-rows: 56px 1fr 38px;
+}
+.toasts {
+  bottom: 46px;
+}
+.page-tabs {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 4px;
+}
+.page-tabs .panel-tab {
+  height: 26px;
+  gap: 6px;
+  padding: 0 16px 0 22px;
+  font-size: 12px;
+}
+.page-tabs .panel-tab::before {
+  left: 9px;
+}
+.page-tabs .panel-tab svg {
+  opacity: 0.75;
+}
+.page-tabs .panel-tab.on svg {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- Mix page: the console */
+
+.mixer {
+  padding: 12px 0 12px 12px;
+  gap: 12px;
+}
+.mixer-strips {
+  align-items: stretch;
+  gap: 6px;
+  padding: 0;
+}
+.mixer .strip {
+  width: 112px;
+  margin-right: 0;
+  overflow: visible;
+}
+.mixer > .strip.master {
+  width: 236px;
+  margin: 0 12px 0 0;
+  align-self: stretch;
+  overflow: visible;
+}
+.mixer .strip.hot {
+  outline: 2px dashed var(--accent);
+  outline-offset: -2px;
+}
+.strip-source {
+  width: 100%;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 6px;
+  border-radius: 5px;
+  border: 1px solid #000;
+  background: radial-gradient(120% 160% at 50% 0%, #19160a 0%, #0d0c08 75%);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.04);
+  color: var(--lcd);
+  font-family: var(--mono);
+  font-size: 10px;
+  flex-shrink: 0;
+}
+.strip-source span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.strip-source svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.strip-source:hover {
+  border-color: rgba(243, 163, 59, 0.5);
+}
+.mixer .strip-fx {
+  flex: 1 1 0;
+  min-height: 62px;
+  gap: 4px;
+}
+.strip-fx-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.strip-fx-head .icon-btn.tiny {
+  width: 20px;
+  height: 20px;
+}
+.strip-fx-list {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid #000;
+  background: #0d0d0e;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.7), 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+.strip-fx-list::-webkit-scrollbar {
+  width: 6px;
+}
+.mixer .strip-fx-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.75);
+  background: linear-gradient(#2a2a2d, #1f1f21);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  color: var(--text-0);
+  font-family: var(--font);
+  font-size: 11px;
+  text-align: left;
+}
+.mixer .strip-fx-item:hover {
+  background: linear-gradient(#313135, #242427);
+}
+.mixer .strip-fx-item.off {
+  opacity: 1;
+  text-decoration: none;
+  color: var(--text-2);
+}
+.strip-fx-item .lamp {
+  width: 5px;
+  height: 5px;
+}
+.strip-fx-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.mixer .strip-fx-empty {
+  padding: 6px 2px;
+  font-size: 10px;
+}
+.mixer .strip-fader-row {
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mixer-add {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 0 8px;
+  flex-shrink: 0;
+}
+
+/* ---------------------------------------------------------------- Sound page */
+
+.sound {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: #0f0f10;
+}
+.sound-tracks {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  background: linear-gradient(#1c1c1e, #161617);
+  border-bottom: 1px solid #000;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+.sound-tracks::-webkit-scrollbar {
+  height: 0;
+}
+.sound-tracks .engraved {
+  margin-right: 4px;
+}
+.sound-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px 0 8px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  border-left: 3px solid var(--track-color, var(--accent));
+  background: linear-gradient(#34322e, #2a2926);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 1px rgba(0, 0, 0, 0.5);
+  color: var(--text-1);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.sound-chip:hover {
+  color: var(--text-0);
+}
+/* The selected track wears the same tape label as its mixer strip. */
+.sound-chip.on {
+  background: linear-gradient(#ece6d6, #ddd5c1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.08),
+    0 1px 1px rgba(0, 0, 0, 0.5);
+  color: #24201a;
+}
+.chip-dot {
+  display: none;
+}
+.sound-monitor {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.sound-monitor-meter {
+  width: 110px;
+  margin-right: 8px;
+}
+.sound-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 6px 20px 28px;
+}
+.sound-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 0;
+  border-radius: 8px;
+}
+.sound-section.hot {
+  outline: 2px dashed var(--accent);
+  outline-offset: 4px;
+}
+.sound .section-title .inst-select {
+  min-width: 160px;
+}
+
+/* Devices become faceplates: parameter groups side by side, like modules. */
+.sound .device {
+  width: fit-content;
+  max-width: 100%;
+}
+.sound .device.instrument {
+  width: auto;
+}
+.sound .device .device-header {
+  padding: 8px 10px 8px 6px;
+  gap: 4px;
+}
+.sound .device .device-name {
+  font-size: 13px;
+  margin-right: 8px;
+}
+.sound .device .preset-select {
+  flex: 0 1 220px;
+}
+.sound .device:not(.instrument) .preset-select {
+  flex: 1 1 120px;
+}
+.sound .device .device-header .move {
+  margin-left: 10px;
+}
+.sound .device .device-header .move + .move {
+  margin-left: 0;
+}
+.sound .device .device-body {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px;
+}
+.sound .device .param-group {
+  flex: 0 0 auto;
+  padding: 8px 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+.sound .device .param-group-title,
+.sound .device .param-group:first-child .param-group-title {
+  border-top: none;
+  padding: 0 6px 8px;
+}
+.sound .device .param-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 0;
+  width: calc(var(--cols, 4) * 78px);
+}
+.sound .device .param {
+  width: 78px;
+}
+.sound .device .param.choice {
+  width: 156px;
+  padding: 0 8px;
+}
+.sound .device .param.toggle {
+  padding-top: 14px;
+}
+.sound .device.plugin .device-body {
+  align-items: center;
+  gap: 12px;
+}
+
+.sound .fx-chain {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+}
+.sound-body > .fx-chain:first-child {
+  border-top: none;
+}
+.sound .fx-chain > .section-title,
+.sound .fx-chain > .empty-note {
+  flex: 0 0 100%;
+}
+
+/* Keybed: piano keys, or named pads for drum kits. */
+.keybed {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  padding: 10px 12px 12px;
+  background: linear-gradient(#1a1a1c, #131314);
+  border-top: 1px solid #000;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  touch-action: none;
+}
+.keys {
+  position: relative;
+  display: flex;
+  height: 92px;
+  border-radius: 0 0 5px 5px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+}
+.key.white {
+  position: relative;
+  width: 30px;
+  height: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  background: linear-gradient(#d9d2c2, #efe9dc 70%, #e3ddcf);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+}
+.key.white span {
+  position: absolute;
+  bottom: 5px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: #6f685c;
+  pointer-events: none;
+}
+.key.white.down {
+  background: linear-gradient(#f0c987, #f6d9a4 70%, #eec57c);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.key.black {
+  position: absolute;
+  top: 0;
+  width: 18px;
+  height: 58%;
+  border: 1px solid #000;
+  border-top: none;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(#2e2e31, #161617);
+  box-shadow: inset 0 -4px 0 rgba(255, 255, 255, 0.06), 0 2px 3px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+.key.black.down {
+  background: linear-gradient(#a8742a, #7a5320);
+}
+.keybed.pads {
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 12px 20px 14px;
+}
+.pad {
+  flex: 1 1 64px;
+  max-width: 116px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.75);
+  background: linear-gradient(#2c2c2f, #202022);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 3px rgba(0, 0, 0, 0.35);
+  color: var(--text-1);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.pad.down {
+  transform: translateY(1px);
+  background: linear-gradient(#1b1b1d, #18181a);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(243, 163, 59, 0.55);
+  color: var(--accent);
+}
+
+/* ---------------------------------------------------------------- Editor: clip settings at the left */
+
+.editor-split {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.editor-main {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.clip-panel {
+  width: 204px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  border-right: 1px solid #000;
+  background: linear-gradient(#1a1a1c, #151516);
+}
+.clip-panel .text-input {
+  width: 100%;
+}
+.clip-panel .knob-row {
+  justify-content: space-between;
+  gap: 4px;
+  padding: 4px 0;
+}
+.clip-panel .toggle-btn {
+  align-self: flex-start;
+}
+

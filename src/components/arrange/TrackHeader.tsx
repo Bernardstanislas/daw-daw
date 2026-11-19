@@ -2,7 +2,7 @@
 
 import { memo, useState } from "react";
 import type { Track } from "../../lib/types";
-import { beginGesture, endGesture, gesture, draftTrack, select, useStore, silent } from "../../lib/store";
+import { beginGesture, endGesture, gesture, draftTrack, openInSound, select, useStore, silent } from "../../lib/store";
 import { moveTrack, toggleTrackFlag, updateTrack } from "../../lib/actions";
 import { deviceName, useCatalog } from "../../lib/catalog";
 import { Knob, Meter } from "../controls";
@@ -126,7 +126,7 @@ export const TrackHeader = memo(function TrackHeader({ track, index, selected }:
         </div>
         {!compact && (
           <div className="track-row second">
-            <span className="track-inst" title={instName}>
+            <span className="track-inst" title={`${instName} — double-click: edit on the Sound page`} onDoubleClick={() => openInSound(track.id)}>
               {instName}
             </span>
             <Knob

@@ -2,10 +2,10 @@ import { useEffect, useRef } from "react";
 import { setUi, useStore } from "./lib/store";
 import { TopBar } from "./components/TopBar";
 import { Browser } from "./components/Browser";
-import { Inspector } from "./components/Inspector";
 import { Arrange } from "./components/arrange/Arrange";
 import { Editor } from "./components/editor/Editor";
 import { Mixer } from "./components/Mixer";
+import { Sound } from "./components/Sound";
 import { Dialogs } from "./components/Dialogs";
 import { ContextMenuHost } from "./components/Menu";
 import { PromptHost } from "./components/Prompt";
@@ -33,39 +33,23 @@ function BottomPanel() {
   return (
     <div className="bottom-panel" style={{ height }} ref={ref}>
       <div className="bottom-resize" onPointerDown={onResize} />
-      <div className="bottom-tabs">
-        <button className={`panel-tab ${bottom === "editor" ? "on" : ""}`} onClick={() => setUi({ bottom: "editor" })}>
-          Editor
-        </button>
-        <button className={`panel-tab ${bottom === "mixer" ? "on" : ""}`} onClick={() => setUi({ bottom: "mixer" })}>
-          Mixer
-        </button>
-
-        <div className="spacer" />
-        <button className="panel-tab" onClick={() => setUi({ bottom: null })} title="Hide (E / X)">
-          ✕
-        </button>
+      <div className="bottom-content">
+        <Editor />
       </div>
-      <div className="bottom-content">{bottom === "editor" ? <Editor /> : <Mixer />}</div>
     </div>
   );
 }
 
-/** Drag handle on the inner edge of a side panel (double-click: default width). */
-function PanelResizer({ side }: { side: "left" | "right" }) {
-  const key = side === "left" ? "browserWidth" : "inspectorWidth";
-  const [min, max, def] = side === "left" ? [180, 560, 250] : [260, 720, 320];
+/** Drag handle on the inner edge of the browser (double-click: default width). */
+function BrowserResizer() {
   const onPointerDown = (e: React.PointerEvent) => {
     e.preventDefault();
     const el = e.currentTarget as HTMLElement;
     capturePointer(el, e.pointerId);
     const x0 = e.clientX;
-    const w0 = useStore.getState().ui[key];
+    const w0 = useStore.getState().ui.browserWidth;
     document.body.classList.add("resizing-x");
-    const move = (ev: PointerEvent) => {
-      const dx = ev.clientX - x0;
-      setUi({ [key]: clamp(side === "left" ? w0 + dx : w0 - dx, min, Math.min(max, window.innerWidth - 500)) });
-    };
+    const move = (ev: PointerEvent) => setUi({ browserWidth: clamp(w0 + ev.clientX - x0, 180, Math.min(560, window.innerWidth - 500)) });
     const up = () => {
       el.removeEventListener("pointermove", move);
       el.removeEventListener("pointerup", up);
@@ -74,21 +58,13 @@ function PanelResizer({ side }: { side: "left" | "right" }) {
     el.addEventListener("pointermove", move);
     el.addEventListener("pointerup", up);
   };
-  return (
-    <div
-      className={`panel-resizer ${side}`}
-      onPointerDown={onPointerDown}
-      onDoubleClick={() => setUi({ [key]: def })}
-      title="Drag to resize · double-click: default width"
-    />
-  );
+  return <div className="panel-resizer left" onPointerDown={onPointerDown} onDoubleClick={() => setUi({ browserWidth: 250 })} title="Drag to resize · double-click: default width" />;
 }
 
 export default function App() {
+  const page = useStore((s) => s.ui.page);
   const browser = useStore((s) => s.ui.browser);
-  const inspector = useStore((s) => s.ui.inspector);
   const browserWidth = useStore((s) => s.ui.browserWidth);
-  const inspectorWidth = useStore((s) => s.ui.inspectorWidth);
   useEffect(() => {
     const prevent = (e: MouseEvent) => {
       // Native context menu only in text fields.
@@ -117,23 +93,23 @@ export default function App() {
   return (
     <div className="app">
       <TopBar />
-      <div className="main" style={{ gridTemplateColumns: `${browser ? `${browserWidth}px ` : ""}1fr${inspector ? ` ${inspectorWidth}px` : ""}` }}>
+      <div className="main" style={{ gridTemplateColumns: `${browser ? `${browserWidth}px ` : ""}1fr` }}>
         {browser && (
           <div className="side-panel">
             <Browser />
-            <PanelResizer side="left" />
+            <BrowserResizer />
           </div>
         )}
         <div className="center">
-          <Arrange />
-          <BottomPanel />
+          {page === "arrange" && (
+            <>
+              <Arrange />
+              <BottomPanel />
+            </>
+          )}
+          {page === "sound" && <Sound />}
+          {page === "mix" && <Mixer />}
         </div>
-        {inspector && (
-          <div className="side-panel">
-            <Inspector />
-            <PanelResizer side="right" />
-          </div>
-        )}
       </div>
       <StatusBar />
       <Dialogs />

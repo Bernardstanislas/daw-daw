@@ -10,11 +10,9 @@ import { MenuButton, type MenuItem } from "./Menu";
 import {
   IconBrowser,
   IconExport,
-  IconInspector,
   IconKeyboard,
   IconLoop,
   IconMetronome,
-  IconMixer,
   IconPiano,
   IconPlay,
   IconRecord,
@@ -104,6 +102,7 @@ export function TopBar() {
   const canRedo = useStore((s) => s.future.length > 0);
   const projectPath = useStore((s) => s.projectPath);
   const dirty = useStore((s) => s.savedProject !== s.project);
+  const arrange = ui.page === "arrange";
 
   return (
     <header className="topbar">
@@ -246,24 +245,13 @@ export function TopBar() {
             <IconBrowser />
           </button>
           <button
-            className={`icon-btn ${ui.bottom === "editor" ? "on" : ""}`}
+            className={`icon-btn ${arrange && ui.bottom === "editor" ? "on" : ""}`}
+            disabled={!arrange}
             onClick={() => setUi({ bottom: ui.bottom === "editor" ? null : "editor" })}
-            title="Editor (E)"
+            title="Editor (E) — Arrange page"
           >
-            <span className={`lamp ${ui.bottom === "editor" ? "lit" : ""}`} />
+            <span className={`lamp ${arrange && ui.bottom === "editor" ? "lit" : ""}`} />
             <IconPiano />
-          </button>
-          <button
-            className={`icon-btn ${ui.bottom === "mixer" ? "on" : ""}`}
-            onClick={() => setUi({ bottom: ui.bottom === "mixer" ? null : "mixer" })}
-            title="Mixer (X)"
-          >
-            <span className={`lamp ${ui.bottom === "mixer" ? "lit" : ""}`} />
-            <IconMixer />
-          </button>
-          <button className={`icon-btn ${ui.inspector ? "on" : ""}`} onClick={() => setUi({ inspector: !ui.inspector })} title="Inspector (I)">
-            <span className={`lamp ${ui.inspector ? "lit" : ""}`} />
-            <IconInspector />
           </button>
         </div>
         <button className={`icon-btn ${ui.typing ? "on" : ""}`} onClick={() => setUi({ typing: !ui.typing })} title="Musical typing: play notes with your computer keyboard (Caps Lock)">
