@@ -207,7 +207,9 @@ const SHORTCUTS: [string, string][] = [
   ["⌘S / ⇧⌘S", "Save / save as"],
   ["⌘O / ⌘N", "Open / new project"],
   ["⌘E", "Export mixdown"],
-  ["B / E / X / I", "Browser / editor / mixer / inspector"],
+  ["1 / 2 / 3", "Pages: Arrange / Sound / Mix (also the tabs at the bottom of the window)"],
+  ["X", "Mix page, and back to Arrange"],
+  ["B / E", "Browser / editor (Arrange page)"],
   ["+ / −", "Zoom in / out (⌘ + wheel too)"],
   ["F", "Follow playhead"],
   ["Caps Lock or ⌨ button", "Musical typing: A W S E D F T G Y H U J K = notes, Z / X = octave, C / V = velocity"],
@@ -241,6 +243,9 @@ function HelpDialog() {
             <li>Draw song sections in the Arranger lane, then drag a section to re-order the whole song.</li>
             <li>Drag in the top strip of the ruler to set the loop region.</li>
             <li>Every knob: drag vertically (⇧ for fine), double-click to reset.</li>
+            <li>Instruments and effects are edited on the Sound page: double-click a track's instrument name (Arrange) or its name on a mixer strip to open it there.</li>
+            <li>The settings of a clip (name, position, loop, gain, fades) are at the left of the editor: double-click the clip to open it.</li>
+            <li>On the Mix page, click an insert to bypass it.</li>
           </ul>
         </div>
       </div>

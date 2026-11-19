@@ -14,8 +14,10 @@ import {
   updateClip,
   updateTrack,
 } from "../../lib/actions";
-import { commit, TRACK_COLORS, useStore } from "../../lib/store";
+import { commit, openInSound, TRACK_COLORS, useStore } from "../../lib/store";
 import { livePosition } from "../../lib/engine";
+import { addEffect } from "../../lib/actions";
+import { useCatalog } from "../../lib/catalog";
 import { promptText } from "../Prompt";
 
 const mod = navigator.platform.includes("Mac") ? "⌘" : "Ctrl+";
@@ -79,8 +81,28 @@ export function clipMenu(clip: Clip): MenuItem[] {
   ];
 }
 
+/** Built-in effects (one submenu of presets each), then the installed plugins. */
+export function addEffectMenu(target: string | "master"): MenuItem[] {
+  const { specs, plugins } = useCatalog.getState();
+  const builtIn: MenuItem[] = specs
+    .filter((s) => s.kind === "effect")
+    .map((s) => ({
+      label: s.name,
+      submenu: [{ name: "Default" }, ...s.presets].map((p) => ({ label: p.name, onClick: () => void addEffect(target, s.typeId, p.name) })),
+    }));
+  const fx = plugins.filter((p) => p.kind === "effect");
+  if (!fx.length) return builtIn;
+  return [
+    ...builtIn,
+    { separator: true },
+    { label: "Plugins", submenu: fx.map((p) => ({ label: `${p.name} (${p.vendor})`, onClick: () => void addEffect(target, p.id) })) },
+  ];
+}
+
 export function trackMenu(track: Track): MenuItem[] {
   return [
+    { label: "Edit on the Sound page", onClick: () => openInSound(track.id) },
+    { separator: true },
     {
       label: "Rename…",
       onClick: async () => {

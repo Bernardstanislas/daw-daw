@@ -93,12 +93,6 @@ export const IconBrowser = (p: P) => (
     <path d="M6 2.5v11" />
   </Svg>
 );
-export const IconInspector = (p: P) => (
-  <Svg {...p}>
-    <rect x="2" y="2.5" width="12" height="11" rx="1.5" />
-    <path d="M10 2.5v11" />
-  </Svg>
-);
 export const IconMixer = (p: P) => (
   <Svg {...p}>
     <path d="M4 2v12M8 2v12M12 2v12" />
@@ -264,6 +258,21 @@ export const IconSection = (p: P) => (
   <Svg {...p}>
     <path d="M2 4h5v3H2zM9 4h5v3H9z" />
     <path d="M2 10h12" />
+  </Svg>
+);
+export const IconArrowLeft = (p: P) => (
+  <Svg {...p}>
+    <path d="M13 8H3M7 4L3 8l4 4" />
+  </Svg>
+);
+export const IconArrowRight = (p: P) => (
+  <Svg {...p}>
+    <path d="M3 8h10M9 4l4 4-4 4" />
+  </Svg>
+);
+export const IconArrange = (p: P) => (
+  <Svg {...p}>
+    <path d="M2 4h7M6 8h8M3 12h6" strokeWidth={2.2} />
   </Svg>
 );
 export const IconPencil = (p: P) => (

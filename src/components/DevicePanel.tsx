@@ -1,11 +1,12 @@
-// Generic device UI generated from the Rust DeviceSpec (knobs, choices, toggles).
+// Generic device UI generated from the Rust DeviceSpec (knobs, choices, toggles),
+// shown on the Sound page: parameter groups side by side, like the modules of a faceplate.
 
 import { memo, useState } from "react";
 import type { DeviceSpec, DeviceState, ParamSpec } from "../lib/types";
 import { beginGesture, commit, endGesture, gesture } from "../lib/store";
 import { applyPreset, draftDevice, moveEffect, removeEffect } from "../lib/actions";
 import { Knob, formatParam } from "./controls";
-import { IconChevronDown, IconChevronRight, IconClose, IconDown, IconPower, IconUp } from "./icons";
+import { IconArrowLeft, IconArrowRight, IconChevronDown, IconChevronRight, IconClose, IconPower } from "./icons";
 import { isPluginType, useCatalog } from "../lib/catalog";
 import { backend, isTauri } from "../lib/backend";
 import { useStore } from "../lib/store";
@@ -65,7 +66,7 @@ function ParamControl({ device, spec }: { device: DeviceState; spec: ParamSpec }
         defaultValue={spec.default}
         log={spec.kind === "log"}
         step={spec.kind === "int" ? 1 : undefined}
-        size={38}
+        size={46}
         label={spec.name}
         display={formatParam(spec, v)}
         onBegin={beginGesture}
@@ -87,6 +88,12 @@ function groupParams(spec: DeviceSpec): [string, ParamSpec[]][] {
   return [...map.entries()];
 }
 
+/** Columns of a group: one row up to 4 controls, two rows beyond (a choice is 2 wide). */
+function groupCols(params: ParamSpec[]): number {
+  const units = params.reduce((n, p) => n + (p.kind === "choice" ? 2 : 1), 0);
+  return units <= 4 ? units : Math.min(6, Math.ceil(units / 2));
+}
+
 export const DevicePanel = memo(function DevicePanel({
   device,
   target,
@@ -95,8 +102,6 @@ export const DevicePanel = memo(function DevicePanel({
   device: DeviceState;
   target: string | "master";
   isInstrument?: boolean;
-  /** Kept for callers; knobs no longer take the track color. */
-  color?: string;
 }) {
   const spec = useCatalog((s) => s.specs.find((x) => x.typeId === device.type));
   const [open, setOpen] = useState(true);
@@ -165,11 +170,11 @@ export const DevicePanel = memo(function DevicePanel({
         </button>
         {!isInstrument && (
           <>
-            <button className="icon-btn tiny" onClick={() => moveEffect(target, device.id, -1)} title="Move up">
-              <IconUp size={12} />
+            <button className="icon-btn tiny move" onClick={() => moveEffect(target, device.id, -1)} title="Move earlier in the chain">
+              <IconArrowLeft size={12} />
             </button>
-            <button className="icon-btn tiny" onClick={() => moveEffect(target, device.id, 1)} title="Move down">
-              <IconDown size={12} />
+            <button className="icon-btn tiny move" onClick={() => moveEffect(target, device.id, 1)} title="Move later in the chain">
+              <IconArrowRight size={12} />
             </button>
             <button className="icon-btn tiny" onClick={() => removeEffect(target, device.id)} title="Remove">
               <IconClose size={12} />
@@ -180,7 +185,7 @@ export const DevicePanel = memo(function DevicePanel({
       {open && (
         <div className="device-body">
           {groups.map(([g, params]) => (
-            <div className="param-group" key={g}>
+            <div className="param-group" key={g} style={{ ["--cols" as string]: groupCols(params) }}>
               {g && !(params.length === 1 && params[0].name === g) && <div className="param-group-title">{g}</div>}
               <div className="param-grid">
                 {params.map((ps) => (
@@ -232,11 +237,11 @@ function PluginPanel({ device, target, isInstrument }: { device: DeviceState; ta
         <span className="plugin-vendor">{plugin ? `${plugin.vendor} · ${plugin.format}` : isTauri ? "not installed" : "desktop only"}</span>
         {!isInstrument && (
           <>
-            <button className="icon-btn tiny" onClick={() => moveEffect(target, device.id, -1)} title="Move up">
-              <IconUp size={12} />
+            <button className="icon-btn tiny move" onClick={() => moveEffect(target, device.id, -1)} title="Move earlier in the chain">
+              <IconArrowLeft size={12} />
             </button>
-            <button className="icon-btn tiny" onClick={() => moveEffect(target, device.id, 1)} title="Move down">
-              <IconDown size={12} />
+            <button className="icon-btn tiny move" onClick={() => moveEffect(target, device.id, 1)} title="Move later in the chain">
+              <IconArrowRight size={12} />
             </button>
             <button className="icon-btn tiny" onClick={() => removeEffect(target, device.id)} title="Remove">
               <IconClose size={12} />
