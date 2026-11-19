@@ -6,7 +6,15 @@ import { produce, type Draft } from "immer";
 import type { AssetInfo, Clip, Project, Track } from "./types";
 import type { SnapValue } from "./music";
 
-export type BottomPanel = "editor" | "mixer" | null;
+export type BottomPanel = "editor" | null;
+
+/** Pages: one full-window workspace per stage of the work, all on the same project and transport. */
+export type Page = "arrange" | "sound" | "mix";
+export const PAGES: { id: Page; label: string; hint: string }[] = [
+  { id: "arrange", label: "Arrange", hint: "Timeline, clips and piano roll" },
+  { id: "sound", label: "Sound", hint: "Instrument and effect chain of one track" },
+  { id: "mix", label: "Mix", hint: "Console: levels, pan and inserts" },
+];
 
 export interface Selection {
   trackId: string | null;
@@ -16,10 +24,10 @@ export interface Selection {
 }
 
 export interface UiState {
+  page: Page;
   pxPerBeat: number;
   snap: SnapValue;
   browser: boolean;
-  inspector: boolean;
   bottom: BottomPanel;
   bottomHeight: number;
   follow: boolean;
@@ -30,7 +38,6 @@ export interface UiState {
   editorMode: "auto" | "piano" | "steps";
   browserTab: "instruments" | "effects" | "loops" | "files";
   browserWidth: number;
-  inspectorWidth: number;
 }
 
 export interface ToastMsg {
@@ -92,7 +99,7 @@ export function emptyProject(): Project {
 
 // Panel sizes survive restarts.
 const UI_KEY = "dawdaw:ui";
-const PERSISTED_UI = ["browserWidth", "inspectorWidth", "bottomHeight", "browser", "inspector"] as const;
+const PERSISTED_UI = ["browserWidth", "bottomHeight", "browser"] as const;
 
 function savedUi(): Partial<UiState> {
   try {
@@ -115,10 +122,10 @@ export const useStore = create<AppStore>(() => ({
   selection: { trackId: null, clipIds: [], noteIds: [], sectionId: null },
   editorClipId: null,
   ui: {
+    page: "arrange",
     pxPerBeat: 28,
     snap: "1/4",
     browser: true,
-    inspector: true,
     bottom: "editor",
     bottomHeight: 300,
     follow: true,
@@ -128,7 +135,6 @@ export const useStore = create<AppStore>(() => ({
     editorMode: "auto",
     browserTab: "instruments",
     browserWidth: 250,
-    inspectorWidth: 320,
     ...savedUi(),
   },
   assets: {},
@@ -221,6 +227,11 @@ function sanitizeSelection() {
 
 export function setUi(patch: Partial<UiState>) {
   useStore.setState((s) => ({ ui: { ...s.ui, ...patch } }));
+}
+
+/** Opens a track on the Sound page (its instrument and effect chain). */
+export function openInSound(trackId: string) {
+  useStore.setState((s) => ({ selection: { ...s.selection, trackId }, ui: { ...s.ui, page: "sound" } }));
 }
 
 export function select(patch: Partial<Selection>) {

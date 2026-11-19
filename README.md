@@ -37,6 +37,16 @@ projet.
 
 ## Fonctionnalités
 
+- **Pages** : trois onglets en bas de la fenêtre, dans l'ordre du travail, sur le même projet et le
+  même transport (touches 1 / 2 / 3).
+  - *Arrange* : la timeline, les sections et l'éditeur de clip (piano roll, pas à pas). Les réglages
+    du clip ouvert (nom, position, boucle, gain, fondus) sont à gauche de l'éditeur.
+  - *Sound* : c'est ici, et seulement ici, qu'on règle les instruments et les effets. Une piste à
+    la fois, son instrument et sa chaîne d'effets étalés sur toute la fenêtre, avec un clavier (ou des pads pour les batteries) pour jouer le son. La chaîne du master
+    s'y règle aussi.
+  - *Mix* : la console pleine hauteur, avec les inserts de chaque tranche (clic = bypass,
+    « + » = ajouter, glisser un effet depuis le navigateur). Un double-clic sur le nom d'une tranche
+    ouvre la piste dans Sound.
 - **Transport** : lecture/stop, boucle (bande haute de la règle), métronome + décompte (clic droit
   sur le métronome : 0/1/2 mesures), tempo, signature, enregistrement.
 - **Arrangement** : pistes instrument / audio, clips MIDI et audio, déplacement (⌥ = copie,
@@ -64,7 +74,7 @@ projet.
 - **Plugins tiers (app de bureau, macOS)** : tous les Audio Units installés (Vital, Surge XT,
   Zebra, Serum…) apparaissent dans le groupe « Plugins » des onglets Instruments et Effects.
   Un clic sur un instrument le pré-écoute au clavier MIDI, un glisser ou un double-clic l'ajoute.
-  Dans l'inspecteur, « Open editor » ouvre le plugin dans sa propre fenêtre (redimensionnable,
+  Sur la page Sound, « Open editor » ouvre le plugin dans sa propre fenêtre (redimensionnable,
   plein écran avec le bouton vert). **Ctrl+Tab** bascule entre la fenêtre principale et les plugins.
   Son état (ton patch) est sauvegardé dans le projet, et le plugin reçoit le tempo et le transport
   (LFO synchronisés).
@@ -73,7 +83,7 @@ projet.
   Limiter, Stereo Width, Tremolo — chacun avec presets ; chaîne par piste + master.
 - **Automation** : bouton « A » d'une piste → enveloppe de volume (re-cliquer : panoramique) ;
   clic = ajouter un point, glisser = déplacer, double-clic = supprimer.
-- **Mixer** : volume, pan, mute/solo/arm, vu-mètres, master.
+- **Mixer** (page Mix) : volume, pan, mute/solo/arm, inserts, vu-mètres, master.
 - **Audio** : import (WAV, MP3, FLAC, OGG, AIFF, M4A) par glisser-déposer depuis le Finder ou le
   navigateur de fichiers (avec pré-écoute), enregistrement micro sur piste audio armée, gain et
   fondus de clip.
@@ -98,7 +108,7 @@ src/                         Frontend React (TypeScript)
   lib/catalog.ts             Catalogue d'instruments/effets fourni par Rust
   lib/patterns.ts            Boucles MIDI intégrées (navigateur « Loops »)
   lib/templates.ts           Modèles de nouveau projet
-  components/…               TopBar, Browser, Arrange, PianoRoll, Mixer, Inspector, dialogues
+  components/…               TopBar, Browser, Arrange, PianoRoll, Sound, Mixer, dialogues
 
 crates/daw-core/src/         Moteur Rust partagé (bureau + navigateur)
 crates/daw-wasm/src/lib.rs   Moteur en WebAssembly (API C minimale, sans wasm-bindgen)
