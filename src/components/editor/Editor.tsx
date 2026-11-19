@@ -1,11 +1,15 @@
-// Bottom "Editor" panel: piano roll for MIDI clips, waveform view for audio clips.
+// Bottom "Editor" panel: the settings of the open clip at the left, then the piano
+// roll or step grid for MIDI clips, the waveform for audio clips.
 
-import { findClip, findTrack, useStore } from "../../lib/store";
+import { beginGesture, draftClip, endGesture, findClip, findTrack, gesture, useStore } from "../../lib/store";
 import { PianoRoll } from "./PianoRoll";
 import { EditorModeSwitch, StepSequencer } from "./StepSequencer";
 import { noteNamesFor } from "../../lib/catalog";
 import { ClipCanvas } from "../arrange/ClipCanvas";
-import { createMidiClip } from "../../lib/actions";
+import { createMidiClip, updateClip } from "../../lib/actions";
+import { DragNumber, Knob } from "../controls";
+import { formatDb } from "../../lib/music";
+import type { Clip } from "../../lib/types";
 import { livePosition } from "../../lib/engine";
 import { beatsPerBar } from "../../lib/music";
 import { useLayoutEffect, useRef, useState } from "react";
@@ -48,7 +52,60 @@ function AudioClipView({ clipId }: { clipId: string }) {
           <div className="empty-note big">Audio file not loaded.</div>
         )}
       </div>
-      <div className="editor-hint">Gain and fades are in the inspector · trim the clip edges in the arrangement.</div>
+      <div className="editor-hint">Trim the clip edges in the arrangement.</div>
+    </div>
+  );
+}
+
+/** Settings of the clip open in the editor: name, position, loop (MIDI), gain and fades (audio). */
+function ClipPanel({ clip }: { clip: Clip }) {
+  const set = (recipe: (c: NonNullable<ReturnType<typeof draftClip>>) => void) =>
+    gesture((p) => {
+      const c = draftClip(p, clip.id);
+      if (c) recipe(c);
+    });
+  return (
+    <div className="clip-panel">
+      <div className="section-title">
+        <span>Clip</span>
+        <span className="muted-text">{clip.kind === "midi" ? `${clip.notes.length} notes` : "audio"}</span>
+      </div>
+      <input className="text-input" value={clip.name} onChange={(e) => updateClip(clip.id, (c) => void (c.name = e.target.value))} onKeyDown={(e) => e.stopPropagation()} title="Clip name" />
+      <div className="field-row">
+        <label>Start</label>
+        <DragNumber value={clip.start} min={0} max={100000} step={0.25} digits={2} onBegin={beginGesture} onChange={(v) => set((c) => void (c.start = v))} onEnd={endGesture} suffix=" beats" />
+      </div>
+      <div className="field-row">
+        <label>Length</label>
+        <DragNumber value={clip.length} min={0.125} max={100000} step={0.25} digits={2} onBegin={beginGesture} onChange={(v) => set((c) => void (c.length = v))} onEnd={endGesture} suffix=" beats" />
+      </div>
+      {clip.kind === "midi" && (
+        <div className="field-row">
+          <label>Loop</label>
+          <DragNumber
+            value={clip.loopLength}
+            min={0}
+            max={64}
+            step={1}
+            digits={2}
+            onBegin={beginGesture}
+            onChange={(v) => set((c) => void (c.loopLength = v))}
+            onEnd={endGesture}
+            suffix={clip.loopLength > 0 ? " beats" : " (off)"}
+            title="Loop length in beats (0 = no loop)"
+          />
+        </div>
+      )}
+      {clip.kind === "audio" && (
+        <div className="knob-row">
+          <Knob value={clip.gain} min={-36} max={12} defaultValue={0} label="Gain" display={`${formatDb(clip.gain)} dB`} onBegin={beginGesture} onChange={(v) => set((c) => void (c.gain = v))} onEnd={endGesture} />
+          <Knob value={clip.fadeIn} min={0} max={Math.max(0.01, clip.length / 2)} defaultValue={0} label="Fade in" display={`${clip.fadeIn.toFixed(2)} b`} onBegin={beginGesture} onChange={(v) => set((c) => void (c.fadeIn = v))} onEnd={endGesture} />
+          <Knob value={clip.fadeOut} min={0} max={Math.max(0.01, clip.length / 2)} defaultValue={0} label="Fade out" display={`${clip.fadeOut.toFixed(2)} b`} onBegin={beginGesture} onChange={(v) => set((c) => void (c.fadeOut = v))} onEnd={endGesture} />
+        </div>
+      )}
+      <button className={`toggle-btn ${clip.muted ? "on" : ""}`} onClick={() => updateClip(clip.id, (c) => void (c.muted = !c.muted))}>
+        Mute clip
+      </button>
     </div>
   );
 }
@@ -75,9 +132,20 @@ export function Editor() {
       </div>
     );
   }
-  if (found.clip.kind === "audio") return <AudioClipView clipId={found.clip.id} />;
   const mode = editorMode === "auto" ? (noteNamesFor(found.track.instrument?.type).size > 0 ? "steps" : "piano") : editorMode;
   const modeSwitch = <EditorModeSwitch mode={mode} />;
-  if (mode === "steps") return <StepSequencer key={found.clip.id} clip={found.clip} track={found.track} modeSwitch={modeSwitch} />;
-  return <PianoRoll key={found.clip.id} clip={found.clip} track={found.track} modeSwitch={modeSwitch} />;
+  return (
+    <div className="editor-split">
+      <ClipPanel clip={found.clip} />
+      <div className="editor-main">
+        {found.clip.kind === "audio" ? (
+          <AudioClipView clipId={found.clip.id} />
+        ) : mode === "steps" ? (
+          <StepSequencer key={found.clip.id} clip={found.clip} track={found.track} modeSwitch={modeSwitch} />
+        ) : (
+          <PianoRoll key={found.clip.id} clip={found.clip} track={found.track} modeSwitch={modeSwitch} />
+        )}
+      </div>
+    </div>
+  );
 }

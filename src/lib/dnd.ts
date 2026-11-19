@@ -1,4 +1,4 @@
-// Drag & drop payloads from the browser panel to the arrangement / inspector.
+// Drag & drop payloads from the browser panel to the arrangement, the Sound page and the mixer.
 
 import { findPattern, patternNotes } from "./patterns";
 import { addInstrumentTrack, addEffect, importAudioFiles, makeMidiClip, setInstrument } from "./actions";
@@ -53,7 +53,7 @@ export function dropOnArrange(payload: DragPayload, trackId: string | null, beat
     }
     case "effect": {
       if (track) addEffect(track.id, payload.type, payload.preset);
-      else toast("Drop effects on a track (or in the inspector).");
+      else toast("Drop effects on a track (or on the Sound page).");
       break;
     }
     case "pattern": {

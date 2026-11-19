@@ -1,6 +1,6 @@
 // Global keyboard shortcuts and "musical typing" (computer keyboard as a MIDI keyboard).
 
-import { commit, redo, setUi, undo, useStore } from "./store";
+import { commit, PAGES, redo, setUi, undo, useStore } from "./store";
 import { livePosition, liveNote, record, seek, togglePlay, useTransport } from "./engine";
 import { copyClips, cutClips, deleteClips, duplicateClips, pasteClips, splitClipsAt, deleteTrack } from "./actions";
 import { exportMixdown, newProject, openProject, saveProject } from "./fileOps";
@@ -57,7 +57,9 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   const s = useStore.getState();
-  const sel = s.selection.clipIds;
+  // Clip shortcuts only act where the clips are visible: on the Arrange page.
+  const arrange = s.ui.page === "arrange";
+  const sel = arrange ? s.selection.clipIds : [];
 
   if (meta) {
     switch (key) {
@@ -105,6 +107,7 @@ function onKeyDown(e: KeyboardEvent) {
         }
         return;
       case "v":
+        if (!arrange) return;
         e.preventDefault();
         pasteClips(Math.max(0, livePosition()));
         return;
@@ -115,6 +118,7 @@ function onKeyDown(e: KeyboardEvent) {
         }
         return;
       case "a": {
+        if (!arrange) return;
         e.preventDefault();
         useStore.setState((st) => ({ selection: { ...st.selection, clipIds: st.project.tracks.flatMap((t) => t.clips.map((c) => c.id)) } }));
         return;
@@ -147,14 +151,21 @@ function onKeyDown(e: KeyboardEvent) {
     }
     case "+":
     case "=":
-      setUi({ pxPerBeat: clamp(s.ui.pxPerBeat * 1.3, 2, 400) });
+      if (arrange) setUi({ pxPerBeat: clamp(s.ui.pxPerBeat * 1.3, 2, 400) });
       return;
     case "-":
-      setUi({ pxPerBeat: clamp(s.ui.pxPerBeat / 1.3, 2, 400) });
+      if (arrange) setUi({ pxPerBeat: clamp(s.ui.pxPerBeat / 1.3, 2, 400) });
       return;
     case "?":
       useStore.setState({ dialog: "help" });
       return;
+  }
+
+  // Pages, by key position so that it also works on layouts whose digit row needs Shift (AZERTY).
+  const page = PAGES[["Digit1", "Digit2", "Digit3"].indexOf(e.code)];
+  if (page && !e.altKey) {
+    setUi({ page: page.id });
+    return;
   }
 
   switch (key) {
@@ -184,16 +195,13 @@ function onKeyDown(e: KeyboardEvent) {
       setUi({ browser: !s.ui.browser });
       return;
     case "e":
-      setUi({ bottom: s.ui.bottom === "editor" ? null : "editor" });
+      if (arrange) setUi({ bottom: s.ui.bottom === "editor" ? null : "editor" });
       return;
     case "x":
-      setUi({ bottom: s.ui.bottom === "mixer" ? null : "mixer" });
-      return;
-    case "i":
-      setUi({ inspector: !s.ui.inspector });
+      setUi({ page: s.ui.page === "mix" ? "arrange" : "mix" });
       return;
     case "f":
-      setUi({ follow: !s.ui.follow });
+      if (arrange) setUi({ follow: !s.ui.follow });
       return;
   }
 }

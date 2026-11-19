@@ -1,11 +1,33 @@
 // Bottom status bar: hints, musical typing state, audio info, toasts.
 
 import { useEffect, useState } from "react";
-import { useStore } from "../lib/store";
+import { PAGES, setUi, useStore, type Page } from "../lib/store";
+import { IconArrange, IconMixer, IconSynth } from "./icons";
 import { useTyping } from "../lib/keyboard";
 import { useTransport } from "../lib/engine";
 import { backend, isTauri, type AudioStatus } from "../lib/backend";
 import { noteName } from "../lib/music";
+
+const PAGE_ICONS: Record<Page, React.ReactNode> = {
+  arrange: <IconArrange size={14} />,
+  sound: <IconSynth size={14} />,
+  mix: <IconMixer size={14} />,
+};
+
+/** Page selector, bottom centre: Arrange · Sound · Mix, in the order of the work. */
+function PageTabs() {
+  const page = useStore((s) => s.ui.page);
+  return (
+    <nav className="page-tabs">
+      {PAGES.map((p, i) => (
+        <button key={p.id} className={`panel-tab ${page === p.id ? "on" : ""}`} onClick={() => setUi({ page: p.id })} title={`${p.hint} (${i + 1})`}>
+          {PAGE_ICONS[p.id]}
+          <span>{p.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
 
 export function StatusBar() {
   const toasts = useStore((s) => s.toasts);
@@ -40,6 +62,7 @@ export function StatusBar() {
       )}
       {live.size > 0 && <span className="status-item notes">{[...live].sort((a, b) => a - b).map(noteName).join(" ")}</span>}
       <span className="spacer" />
+      <PageTabs />
       <span className="status-item dim">
         {!isTauri
           ? audio?.error

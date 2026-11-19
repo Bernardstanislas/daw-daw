@@ -21,6 +21,9 @@ import { useCatalog } from "../../lib/catalog";
 import type { Track } from "../../lib/types";
 import { addSection, hasClipboard, pasteClips } from "../../lib/actions";
 
+/** Scroll position kept while another page is shown (the arrangement is unmounted meanwhile). */
+const lastScroll = { left: 0, top: 0 };
+
 function Playhead() {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -138,7 +141,17 @@ export function Arrange() {
     const ro = new ResizeObserver(() => setViewW(el.clientWidth));
     ro.observe(el);
     setViewW(el.clientWidth);
-    return () => ro.disconnect();
+    el.scrollLeft = lastScroll.left;
+    el.scrollTop = lastScroll.top;
+    const onScroll = () => {
+      lastScroll.left = el.scrollLeft;
+      lastScroll.top = el.scrollTop;
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      ro.disconnect();
+      el.removeEventListener("scroll", onScroll);
+    };
   }, []);
 
   // Ctrl/Cmd + wheel = zoom around pointer
