@@ -10,6 +10,7 @@ import { noteNamesFor } from "../../lib/catalog";
 import { quantizeNotes, transposeNotes } from "../../lib/actions";
 import { IconPencil, IconPointer } from "../icons";
 import { StepInputControls } from "./StepInput";
+import { auditionProps } from "./audition";
 import { HFader } from "../controls";
 import { useStepRecord } from "../../lib/stepRecord";
 
@@ -461,9 +462,7 @@ export function PianoRoll({ clip, track, modeSwitch }: { clip: Clip; track: Trac
                     key={p}
                     className={`pr-key ${black ? "black" : "white"} ${p % 12 === 0 ? "c" : ""} ${label ? "named" : ""} ${liveNotes.has(p) ? "live" : ""}`}
                     style={{ height: rowH }}
-                    onPointerDown={() => liveNote(p, 0.8, true, track.id)}
-                    onPointerUp={() => liveNote(p, 0, false, track.id)}
-                    onPointerLeave={(e) => e.buttons && liveNote(p, 0, false, track.id)}
+                    {...auditionProps(p, track.id)}
                     title={`${noteName(p)}${label ? " — " + label : ""}`}
                   >
                     {label ? <span>{label}</span> : p % 12 === 0 || fold ? <span>{noteName(p)}</span> : null}

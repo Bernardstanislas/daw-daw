@@ -36,6 +36,8 @@ export interface UiState {
   editorRowHeight: number;
   /** MIDI editor view; "auto" = steps for drum kits, piano roll otherwise. */
   editorMode: "auto" | "piano" | "steps";
+  /** Clip settings (name, position, loop, gain, fades) shown at the right of the editor. */
+  clipPanel: boolean;
   browserTab: "instruments" | "effects" | "loops" | "files";
   browserWidth: number;
 }
@@ -99,7 +101,7 @@ export function emptyProject(): Project {
 
 // Panel sizes survive restarts.
 const UI_KEY = "dawdaw:ui";
-const PERSISTED_UI = ["browserWidth", "bottomHeight", "browser"] as const;
+const PERSISTED_UI = ["browserWidth", "bottomHeight", "browser", "clipPanel"] as const;
 
 function savedUi(): Partial<UiState> {
   try {
@@ -133,6 +135,7 @@ export const useStore = create<AppStore>(() => ({
     editorPxPerBeat: 80,
     editorRowHeight: 14,
     editorMode: "auto",
+    clipPanel: false,
     browserTab: "instruments",
     browserWidth: 250,
     ...savedUi(),
