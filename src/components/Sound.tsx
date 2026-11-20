@@ -128,9 +128,13 @@ function EffectChain({ target, effects }: { target: string | "master"; effects: 
         </MenuButton>
       </div>
       {effects.length === 0 && <div className="empty-note">No effects. Add one or drag it from the browser.</div>}
-      {effects.map((d) => (
-        <DevicePanel key={d.id} device={d} target={target} />
-      ))}
+      {effects.length > 0 && (
+        <div className="fx-rack">
+          {effects.map((d) => (
+            <DevicePanel key={d.id} device={d} target={target} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -185,6 +189,7 @@ function TrackMonitor({ track }: { track: Track }) {
 
 function TrackSound({ track }: { track: Track }) {
   const [hot, setHot] = useState(false);
+  const typing = useStore((s) => s.ui.typing);
   return (
     <>
       <div className="sound-body">
@@ -223,7 +228,7 @@ function TrackSound({ track }: { track: Track }) {
         )}
         <EffectChain target={track.id} effects={track.effects} />
       </div>
-      {track.kind === "instrument" && <Keybed key={track.id} track={track} />}
+      {track.kind === "instrument" && typing && <Keybed key={track.id} track={track} />}
     </>
   );
 }

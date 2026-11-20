@@ -63,6 +63,16 @@ pub(crate) fn mix(dry: f32, wet: f32, m: f32) -> f32 {
     dry + (wet - dry) * m
 }
 
+/// Dry/wet balance for time-based effects (chorus, phaser, echo): the dry
+/// signal stays at full level up to 50 % while the wet one fades in, then
+/// the dry fades out. A plain crossfade loses ~5 dB at 50 % because the wet
+/// signal is decorrelated from the dry one; this keeps the level steady.
+/// Exactly `dry` when `m == 0`.
+#[inline]
+pub(crate) fn mix_send(dry: f32, wet: f32, m: f32) -> f32 {
+    dry * (2.0 - 2.0 * m).min(1.0) + wet * (2.0 * m).min(1.0)
+}
+
 /// Rounds a choice / int parameter value to an index.
 #[inline]
 pub(crate) fn idx(v: f32) -> usize {
