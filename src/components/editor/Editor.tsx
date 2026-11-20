@@ -1,7 +1,7 @@
-// Bottom "Editor" panel: the settings of the open clip at the left, then the piano
-// roll or step grid for MIDI clips, the waveform for audio clips.
+// Bottom "Editor" panel: the piano roll or step grid for MIDI clips, the waveform
+// for audio clips, and the clip settings at the right (toggled from the toolbar).
 
-import { beginGesture, draftClip, endGesture, findClip, findTrack, gesture, useStore } from "../../lib/store";
+import { beginGesture, draftClip, endGesture, findClip, findTrack, gesture, setUi, useStore } from "../../lib/store";
 import { PianoRoll } from "./PianoRoll";
 import { EditorModeSwitch, StepSequencer } from "./StepSequencer";
 import { noteNamesFor } from "../../lib/catalog";
@@ -14,7 +14,7 @@ import { livePosition } from "../../lib/engine";
 import { beatsPerBar } from "../../lib/music";
 import { useLayoutEffect, useRef, useState } from "react";
 
-function AudioClipView({ clipId }: { clipId: string }) {
+function AudioClipView({ clipId, toolbar }: { clipId: string; toolbar: React.ReactNode }) {
   const foundClip = useStore((s) => findClip(s.project, clipId)?.clip);
   const foundTrack = useStore((s) => findClip(s.project, clipId)?.track);
   const found = foundClip && foundTrack ? { clip: foundClip, track: foundTrack } : undefined;
@@ -38,6 +38,7 @@ function AudioClipView({ clipId }: { clipId: string }) {
         <span className="editor-title" style={{ ["--track-color" as string]: track.color }}>
           <span className="swatch" /> {track.name} › {clip.name}
         </span>
+        {toolbar}
         <div className="spacer" />
         {asset && (
           <span className="muted-text">
@@ -112,6 +113,7 @@ function ClipPanel({ clip }: { clip: Clip }) {
 
 export function Editor() {
   const editorMode = useStore((s) => s.ui.editorMode);
+  const clipPanel = useStore((s) => s.ui.clipPanel);
   const editorClipId = useStore((s) => s.editorClipId);
   const foundClip = useStore((s) => findClip(s.project, s.editorClipId)?.clip);
   const foundTrack = useStore((s) => findClip(s.project, s.editorClipId)?.track);
@@ -133,19 +135,33 @@ export function Editor() {
     );
   }
   const mode = editorMode === "auto" ? (noteNamesFor(found.track.instrument?.type).size > 0 ? "steps" : "piano") : editorMode;
-  const modeSwitch = <EditorModeSwitch mode={mode} />;
+  const panelToggle = (
+    <button
+      className={`toggle-btn small ${clipPanel ? "on" : ""}`}
+      onClick={() => setUi({ clipPanel: !clipPanel })}
+      title="Show the clip settings (name, position, loop, gain, fades) at the right"
+    >
+      Clip
+    </button>
+  );
+  const modeSwitch = (
+    <>
+      <EditorModeSwitch mode={mode} />
+      {panelToggle}
+    </>
+  );
   return (
     <div className="editor-split">
-      <ClipPanel clip={found.clip} />
       <div className="editor-main">
         {found.clip.kind === "audio" ? (
-          <AudioClipView clipId={found.clip.id} />
+          <AudioClipView clipId={found.clip.id} toolbar={panelToggle} />
         ) : mode === "steps" ? (
           <StepSequencer key={found.clip.id} clip={found.clip} track={found.track} modeSwitch={modeSwitch} />
         ) : (
           <PianoRoll key={found.clip.id} clip={found.clip} track={found.track} modeSwitch={modeSwitch} />
         )}
       </div>
+      {clipPanel && <ClipPanel clip={found.clip} />}
     </div>
   );
 }
