@@ -2690,6 +2690,7 @@ select {
 .vu {
   position: relative;
   flex-shrink: 0;
+  overflow: hidden;
   border-radius: 6px;
   border: 2px solid #0b0b0c;
   background: radial-gradient(130% 120% at 50% 100%, #f7e6b9 0%, #ecd498 45%, #c9a964 100%);
@@ -2700,6 +2701,7 @@ select {
 }
 .vu svg {
   display: block;
+  overflow: hidden;
 }
 .vu-scale {
   fill: none;
@@ -4209,6 +4211,85 @@ input.text-input.title.tape:focus {
 .sound .fx-chain > .section-title,
 .sound .fx-chain > .empty-note {
   flex: 0 0 100%;
+}
+
+/* Effect rack: tall cards side by side, in chain order, scrolling sideways. */
+.sound .fx-rack {
+  flex: 0 0 100%;
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+}
+.sound .fx-rack > .device {
+  flex: 0 0 216px;
+  width: 216px;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
+  scroll-snap-align: start;
+}
+.sound .fx-rack > .device .device-header {
+  padding: 6px 6px 6px 4px;
+  gap: 2px;
+}
+.sound .fx-rack > .device .device-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
+  margin-right: 0;
+}
+.sound .fx-rack > .device .device-header .move {
+  margin-left: 0;
+}
+.device-spacer {
+  flex: 1;
+}
+.sound .fx-rack .plugin-vendor {
+  display: none;
+}
+.device-presets {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 6px 0;
+}
+.sound .fx-rack .device-presets .preset-select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.sound .fx-rack > .device .device-body {
+  flex: 1;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 8px;
+}
+.sound .fx-rack > .device .param-group {
+  width: 100%;
+}
+.sound .fx-rack > .device .param-grid {
+  width: 100%;
+  justify-content: flex-start;
+}
+.sound .fx-rack > .device .param {
+  width: 50%;
+}
+.sound .fx-rack > .device .param.choice {
+  width: 100%;
+}
+.sound .fx-rack > .device.plugin .device-body {
+  align-items: stretch;
+}
+.sound .fx-rack > .device.missing {
+  min-height: 0;
+  flex-direction: row;
 }
 
 /* Keybed: piano keys, or named pads for drum kits. */

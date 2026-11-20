@@ -413,7 +413,8 @@ const VU_SWEEP = 48; // degrees each side of center
 
 /** dB → needle angle (the printed scale is not linear in dB, like a real meter). */
 function vuAngle(vu: number): number {
-  const v = Math.max(VU_MIN, Math.min(VU_MAX + 1, vu));
+  // The needle rests on the peg just past +3, never beyond the printed scale.
+  const v = Math.max(VU_MIN - 1, Math.min(VU_MAX + 0.4, vu));
   // Map through amplitude so the scale bunches up at the low end.
   const a = Math.pow(10, v / 20);
   const aMin = Math.pow(10, VU_MIN / 20);
@@ -444,7 +445,9 @@ export function VuMeter({ source = "master", channel = -1, width = 124, label = 
     const tick = (now: number) => {
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
-      const target = level > 1e-5 ? 20 * Math.log10(level) + 18 - 3 : VU_MIN - 2; // peak → rough average
+      // Meters report sample peaks. Calibrate so 0 VU ≈ -6 dBFS peak: the red zone is
+      // the last few dB before clipping, not "any normal level".
+      const target = level > 1e-5 ? 20 * Math.log10(level) + 6 : VU_MIN - 2;
       vu += (target - vu) * (1 - Math.exp(-dt / 0.3));
       if (needle.current) needle.current.style.transform = `rotate(${vuAngle(vu)}deg)`;
       raf = requestAnimationFrame(tick);

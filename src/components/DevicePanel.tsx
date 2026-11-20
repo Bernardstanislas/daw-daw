@@ -121,6 +121,34 @@ export const DevicePanel = memo(function DevicePanel({
     );
   }
   const groups = groupParams(spec);
+  const presetPicker = (
+    <>
+      <button
+        className="icon-btn tiny"
+        onClick={() => stepPreset(spec.presets, device, -1)}
+        title="Previous preset"
+      >
+        ‹
+      </button>
+      <select className="preset-select" value={device.preset ?? "Default"} onChange={(e) => applyPreset(device.id, e.target.value)} title="Preset">
+        <option value="Default">Default</option>
+        {spec.presets
+          .filter((p) => p.name !== "Default")
+          .map((p) => (
+            <option key={p.name} value={p.name}>
+              {p.name}
+            </option>
+          ))}
+      </select>
+      <button
+        className="icon-btn tiny"
+        onClick={() => stepPreset(spec.presets, device, 1)}
+        title="Next preset"
+      >
+        ›
+      </button>
+    </>
+  );
   return (
     <div className={`device ${device.enabled ? "" : "bypassed"} ${isInstrument ? "instrument" : ""}`}>
       <div className="device-header">
@@ -144,30 +172,8 @@ export const DevicePanel = memo(function DevicePanel({
         <span className="device-name" title={spec.description}>
           {spec.name}
         </span>
-        <button
-          className="icon-btn tiny"
-          onClick={() => stepPreset(spec.presets, device, -1)}
-          title="Previous preset"
-        >
-          ‹
-        </button>
-        <select className="preset-select" value={device.preset ?? "Default"} onChange={(e) => applyPreset(device.id, e.target.value)} title="Preset">
-          <option value="Default">Default</option>
-          {spec.presets
-            .filter((p) => p.name !== "Default")
-            .map((p) => (
-              <option key={p.name} value={p.name}>
-                {p.name}
-              </option>
-            ))}
-        </select>
-        <button
-          className="icon-btn tiny"
-          onClick={() => stepPreset(spec.presets, device, 1)}
-          title="Next preset"
-        >
-          ›
-        </button>
+        {!isInstrument && <span className="device-spacer" />}
+        {isInstrument && presetPicker}
         {!isInstrument && (
           <>
             <button className="icon-btn tiny move" onClick={() => moveEffect(target, device.id, -1)} title="Move earlier in the chain">
@@ -182,6 +188,7 @@ export const DevicePanel = memo(function DevicePanel({
           </>
         )}
       </div>
+      {open && !isInstrument && <div className="device-presets">{presetPicker}</div>}
       {open && (
         <div className="device-body">
           {groups.map(([g, params]) => (
@@ -234,6 +241,7 @@ function PluginPanel({ device, target, isInstrument }: { device: DeviceState; ta
         <span className="device-name" title={plugin ? `${plugin.vendor} · ${plugin.format}` : "Plugin"}>
           {name}
         </span>
+        {!isInstrument && <span className="device-spacer" />}
         <span className="plugin-vendor">{plugin ? `${plugin.vendor} · ${plugin.format}` : isTauri ? "not installed" : "desktop only"}</span>
         {!isInstrument && (
           <>
