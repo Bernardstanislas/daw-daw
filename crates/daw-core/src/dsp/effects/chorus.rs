@@ -1,7 +1,7 @@
 //! "Chorus": two modulated delay taps per channel, LFOs offset by 90° between
 //! channels for a wide stereo image, with optional feedback (flanger-ish).
 
-use super::{Lfo, mix};
+use super::{Lfo, mix_send};
 use crate::dsp::util::{DelayLine, Smoother};
 use crate::dsp::{DeviceKind, DeviceSpec, Effect, ParamSpec, ParamValues, Preset, ProcessCtx};
 
@@ -147,8 +147,8 @@ impl Effect for Chorus {
             self.lfo.advance(rate * inv_sr);
             self.line_l.push(a + wl * fb);
             self.line_r.push(b + wr * fb);
-            *xl = mix(a, wl, m);
-            *xr = mix(b, wr, m);
+            *xl = mix_send(a, wl, m);
+            *xr = mix_send(b, wr, m);
         }
     }
 

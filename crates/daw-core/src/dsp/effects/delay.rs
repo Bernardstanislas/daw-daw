@@ -1,7 +1,7 @@
 //! "Echo": stereo / ping-pong delay with tempo sync, filtered feedback and a
 //! smoothed read head (time changes glide like tape instead of crackling).
 
-use super::{idx, mix, on};
+use super::{idx, mix_send, on};
 use crate::dsp::util::{DelayLine, OnePole, SYNC_NAMES, Smoother, soft_clip, sync_seconds};
 use crate::dsp::{DeviceKind, DeviceSpec, Effect, ParamSpec, ParamValues, Preset, ProcessCtx};
 
@@ -185,8 +185,8 @@ impl Effect for Echo {
                 self.line_l.push(a + fl);
                 self.line_r.push(b + fr);
             }
-            *xl = mix(a, out_l, m);
-            *xr = mix(b, out_r, m);
+            *xl = mix_send(a, out_l, m);
+            *xr = mix_send(b, out_r, m);
         }
     }
 

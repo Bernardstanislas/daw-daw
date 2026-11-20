@@ -56,13 +56,41 @@ function MenuList({ items, onClose }: { items: MenuItem[]; onClose: () => void }
             {it.shortcut && <span className="menu-shortcut">{it.shortcut}</span>}
             {it.submenu && <span className="menu-shortcut">›</span>}
             {it.submenu && sub === i && (
-              <div className="menu-sub">
-                <MenuList items={it.submenu} onClose={onClose} />
-              </div>
+              <SubMenu items={it.submenu} onClose={onClose} />
             )}
           </div>
         ),
       )}
+    </div>
+  );
+}
+
+/** Submenu that opens to the right, flipping left / shifting up to stay inside the window. */
+function SubMenu({ items, onClose }: { items: MenuItem[]; onClose: () => void }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [style, setStyle] = useState<React.CSSProperties>({ visibility: "hidden" });
+  useLayoutEffect(() => {
+    const el = ref.current;
+    const parent = el?.parentElement;
+    if (!el || !parent) return;
+    const p = parent.getBoundingClientRect();
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const m = 6;
+    const s: React.CSSProperties = {};
+    if (p.right + w > window.innerWidth - m) {
+      s.left = "auto";
+      s.right = "100%";
+      s.paddingLeft = 0;
+      s.paddingRight = 4;
+    }
+    const top = p.top - 5;
+    if (top + h > window.innerHeight - m) s.top = Math.max(m, window.innerHeight - m - h) - p.top;
+    setStyle(s);
+  }, [items]);
+  return (
+    <div className="menu-sub" ref={ref} style={style}>
+      <MenuList items={items} onClose={onClose} />
     </div>
   );
 }

@@ -2,7 +2,8 @@
 //! octaves around a center frequency), with feedback. The right channel's
 //! LFO is offset by 90° for a stereo sweep.
 
-use super::{Lfo, idx, mix};
+use super::{Lfo, idx};
+use std::f32::consts::FRAC_PI_2;
 use crate::dsp::util::{Smoother, fast_pow2, fast_tan, flush, soft_clip};
 use crate::dsp::{DeviceKind, DeviceSpec, Effect, ParamSpec, ParamValues, Preset, ProcessCtx};
 use std::f32::consts::PI;
@@ -157,6 +158,9 @@ impl Effect for Phaser {
             let fb = self.feedback.next();
             let center = self.center.next();
             let m = self.mix.next();
+            // Equal-power dry/wet: a linear crossfade loses ~5 dB at 50 %, while
+            // keeping both at full level overshoots on the feedback resonances.
+            let (g_dry, g_wet) = ((m * FRAC_PI_2).cos(), (m * FRAC_PI_2).sin());
             let a_l = self.coef(center + depth * self.lfo.at(1, 0.0));
             let a_r = self.coef(center + depth * self.lfo.at(1, 0.25));
             self.lfo.advance(rate * inv_sr);
@@ -170,7 +174,7 @@ impl Effect for Phaser {
                     y = stage.process(y, a);
                 }
                 self.fb_state[ch] = flush(y);
-                *x = mix(dry, y, m);
+                *x = dry * g_dry + y * g_wet;
             }
         }
     }
