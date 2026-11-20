@@ -146,6 +146,18 @@ remontent via des atomiques, émis vers l'UI à ~30 Hz.
    Lancez `cargo test --lib dump_catalog -- --ignored` pour rafraîchir le catalogue du mode
    navigateur (`src/lib/catalog.fixture.json`).
 
+## Release et mises à jour
+
+Pousser un tag `vX.Y.Z` déclenche `.github/workflows/release.yml` : build macOS (universel Intel + Apple Silicon, `.dmg`) et Windows (installeur NSIS), puis publication d'une release GitHub avec `latest.json`. La version de l'app est prise dans le tag.
+
+```sh
+git tag v0.2.0 && git push origin v0.2.0
+```
+
+L'app vérifie `latest.json` au démarrage puis toutes les 6 h, propose la mise à jour, la télécharge, l'installe et redémarre (`src/components/Updater.tsx`, `tauri-plugin-updater`). Les paquets de mise à jour sont signés : la clé privée est dans le secret GitHub `TAURI_SIGNING_PRIVATE_KEY` (copie locale `~/.tauri/daw-daw.key`), la clé publique dans `tauri.conf.json`. Perdre la clé privée = plus aucune mise à jour possible pour les installations existantes.
+
+Les builds ne sont pas signés Apple/Microsoft : au premier téléchargement, macOS bloque l'app (`xattr -cr /Applications/daw-daw.app`) et Windows affiche SmartScreen. Les mises à jour automatiques ne sont pas concernées.
+
 ## Limites connues
 
 - Plugins : Audio Units seulement (macOS). Vital, comme la plupart des plugins, existe aussi en

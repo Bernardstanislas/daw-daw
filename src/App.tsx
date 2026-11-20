@@ -9,6 +9,7 @@ import { Sound } from "./components/Sound";
 import { Dialogs } from "./components/Dialogs";
 import { ContextMenuHost } from "./components/Menu";
 import { PromptHost } from "./components/Prompt";
+import { Updater } from "./components/Updater";
 import { StatusBar } from "./components/StatusBar";
 import { clamp, capturePointer } from "./lib/music";
 
@@ -115,6 +116,7 @@ export default function App() {
       <Dialogs />
       <ContextMenuHost />
       <PromptHost />
+      <Updater />
     </div>
   );
 }
