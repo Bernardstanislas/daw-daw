@@ -11,7 +11,8 @@ import { beatsPerBar, noteName, uid } from "../../lib/music";
 import { openContextMenu } from "../Menu";
 import { useStore } from "../../lib/store";
 import { StepInputControls } from "./StepInput";
-import { useStepRecord } from "../../lib/stepRecord";
+import { auditionProps } from "./audition";
+import { setStepCursor, setStepPattern, useStepRecord } from "../../lib/stepRecord";
 
 const STEP_SIZES: { label: string; beats: number }[] = [
   { label: "1/8", beats: 0.5 },
@@ -74,6 +75,10 @@ export function StepSequencer({ clip, track, modeSwitch }: { clip: Clip; track: 
   const onCellDown = (e: React.PointerEvent, pitch: number, step: number) => {
     if (e.button !== 0) return;
     e.preventDefault();
+    if (e.altKey && useStepRecord.getState().active) {
+      setStepCursor(step * stepBeats);
+      return;
+    }
     const hits = cellNotes(clip.notes, pitch, step * stepBeats, stepBeats);
     beginGesture();
     if (e.shiftKey && hits.length) {
@@ -154,10 +159,15 @@ export function StepSequencer({ clip, track, modeSwitch }: { clip: Clip; track: 
     return () => cancelAnimationFrame(raf);
   }, [clip.start, clip.length, clip.offset, patternLen, stepBeats, steps]);
 
+  // Step input here follows the grid: same step, cursor wrapping around the pattern.
+  const gridLen = steps * stepBeats;
+  useEffect(() => setStepPattern(stepBeats, gridLen), [stepBeats, gridLen]);
+  useEffect(() => () => setStepPattern(Number(localStorage.getItem("dawdaw:stepInput")) || 0.25, 0), []);
+
   const stepsPerBeat = Math.max(1, Math.round(1 / stepBeats));
   const stepRec = useStepRecord();
-  const cursorStep =
-    stepRec.active && stepRec.clipId === clip.id ? Math.floor((stepRec.cursor % patternLen) / stepBeats + 1e-6) : null;
+  const recording = stepRec.active && stepRec.clipId === clip.id;
+  const cursorStep = recording ? Math.floor((stepRec.cursor % gridLen) / stepBeats + 1e-6) : null;
   const lengths = [bpb, bpb * 2, bpb * 4];
 
   return (
@@ -167,7 +177,7 @@ export function StepSequencer({ clip, track, modeSwitch }: { clip: Clip; track: 
           <span className="swatch" /> {track.name} › {clip.name}
         </span>
         {modeSwitch}
-        <StepInputControls clipId={clip.id} />
+        <StepInputControls clipId={clip.id} pattern />
         <label className="mini-field">
           Step
           <select value={stepBeats} onChange={(e) => setStepBeats(+e.target.value)}>
@@ -194,7 +204,7 @@ export function StepSequencer({ clip, track, modeSwitch }: { clip: Clip; track: 
         )}
         <div className="spacer" />
         <span className="muted-text">
-          {steps} steps · Shift-click: accent
+          {steps} steps · {recording ? "Alt-click: move the cursor" : "Shift-click: accent"}
         </span>
       </div>
       <div className="steps-body">
@@ -205,9 +215,7 @@ export function StepSequencer({ clip, track, modeSwitch }: { clip: Clip; track: 
               <div className="steps-row" key={pitch}>
                 <button
                   className="steps-row-head"
-                  onPointerDown={() => liveNote(pitch, 0.8, true, track.id)}
-                  onPointerUp={() => liveNote(pitch, 0, false, track.id)}
-                  onPointerLeave={(e) => e.buttons && liveNote(pitch, 0, false, track.id)}
+                  {...auditionProps(pitch, track.id)}
                   onContextMenu={(e) =>
                     openContextMenu(e, [
                       { label: "Every step", onClick: () => fillRow(pitch, 1) },
@@ -245,7 +253,9 @@ export function StepSequencer({ clip, track, modeSwitch }: { clip: Clip; track: 
         </div>
       </div>
       <div className="editor-hint">
-        Click or drag to paint steps · Shift-click cycles accent / soft · right-click a row name to fill it · the pattern loops over the clip
+        {recording
+          ? "Step input adds to the steps already there · ← → move the cursor · ⌫ clears the previous step · Esc stops"
+          : "Click or drag to paint steps · Shift-click cycles accent / soft · right-click a row name to fill it · the pattern loops over the clip"}
       </div>
     </div>
   );

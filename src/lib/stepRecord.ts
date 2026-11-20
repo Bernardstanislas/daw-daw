@@ -27,6 +27,8 @@ interface StepRecordState {
   step: number;
   /** Note length as a fraction of the step (legato = 1). */
   gate: number;
+  /** Pattern length (beats) the cursor wraps around in, set by the step view; 0 = free (the clip grows). */
+  wrapAt: number;
 }
 
 export const useStepRecord = create<StepRecordState>(() => ({
@@ -35,6 +37,7 @@ export const useStepRecord = create<StepRecordState>(() => ({
   cursor: 0,
   step: Number(localStorage.getItem("dawdaw:stepInput")) || 0.25,
   gate: 0.9,
+  wrapAt: 0,
 }));
 
 const held = new Set<number>();
@@ -51,13 +54,33 @@ export function startStepRecord(clipId: string) {
   const found = findClip(useStore.getState().project, clipId);
   if (!found) return;
   const { clip } = found;
-  const { step } = useStepRecord.getState();
+  const { step, wrapAt } = useStepRecord.getState();
   const rel = livePosition() - clip.start;
   const inside = rel >= 0 && rel < clip.length;
   const cursor = inside ? Math.floor((rel + clip.offset) / step + 1e-6) * step : Math.max(0, clip.offset);
   held.clear();
   chordAt = null;
-  useStepRecord.setState({ active: true, clipId, cursor });
+  useStepRecord.setState({ active: true, clipId, cursor: wrap(cursor, step, wrapAt) });
+}
+
+/** Snaps a cursor to the step grid and, in a pattern, wraps it around the pattern. */
+function wrap(cursor: number, step: number, wrapAt: number) {
+  let c = Math.round(cursor / step) * step;
+  if (wrapAt > 0) {
+    c = ((c % wrapAt) + wrapAt) % wrapAt;
+    if (c > wrapAt - step / 2) c = 0;
+  }
+  return Math.max(0, c);
+}
+
+/**
+ * Step view: the cursor moves by the view's step and wraps around the pattern,
+ * so step input overdubs onto the existing steps instead of growing the clip.
+ * `wrapAt` 0 goes back to free step input (piano roll).
+ */
+export function setStepPattern(step: number, wrapAt: number) {
+  const s = useStepRecord.getState();
+  useStepRecord.setState({ step, wrapAt, cursor: wrap(s.cursor, step, wrapAt) });
 }
 
 export function stopStepRecord() {
@@ -89,28 +112,48 @@ function ensureFits(clipId: string, end: number) {
   });
 }
 
+/** The cursor one step after `from` (wrapping in a pattern, else growing the clip). */
+function nextStep(from: number) {
+  const s = useStepRecord.getState();
+  if (s.wrapAt > 0) return wrap(from + s.step, s.step, s.wrapAt);
+  if (s.clipId) ensureFits(s.clipId, from + s.step);
+  return from + s.step;
+}
+
 /** Moves the cursor one step forward (a rest). */
 export function stepRest() {
   const s = useStepRecord.getState();
   if (!s.active || !s.clipId) return;
-  const next = s.cursor + s.step;
-  ensureFits(s.clipId, next);
-  useStepRecord.setState({ cursor: next });
+  useStepRecord.setState({ cursor: nextStep(s.cursor) });
+}
+
+function prevStep() {
+  const s = useStepRecord.getState();
+  return s.wrapAt > 0 ? wrap(s.cursor - s.step, s.step, s.wrapAt) : Math.max(0, s.cursor - s.step);
 }
 
 /** Moves the cursor one step back. */
 export function stepBack() {
   const s = useStepRecord.getState();
   if (!s.active) return;
-  useStepRecord.setState({ cursor: Math.max(0, s.cursor - s.step) });
+  useStepRecord.setState({ cursor: prevStep() });
+}
+
+/** Moves the cursor to a step (clicked in the step view). */
+export function setStepCursor(cursor: number) {
+  const s = useStepRecord.getState();
+  if (!s.active) return;
+  held.clear();
+  chordAt = null;
+  useStepRecord.setState({ cursor: wrap(cursor, s.step, s.wrapAt) });
 }
 
 /** Deletes the notes of the previous step and moves back onto it. */
 export function stepDeleteBack() {
   const s = useStepRecord.getState();
   if (!s.active || !s.clipId) return;
-  const from = Math.max(0, s.cursor - s.step);
-  const to = s.cursor;
+  const from = prevStep();
+  const to = from + s.step;
   commit((d) => {
     const c = draftClip(d, s.clipId!);
     if (c) c.notes = c.notes.filter((n) => !(n.start >= from - 1e-6 && n.start < to - 1e-6));
@@ -125,16 +168,16 @@ function onNote(pitch: number, velocity: number, on: boolean) {
     if (held.size === 0) chordAt = s.cursor;
     held.add(pitch);
     const start = chordAt ?? s.cursor;
-    ensureFits(s.clipId, start + s.step);
+    if (s.wrapAt <= 0) ensureFits(s.clipId, start + s.step);
     commit((d) => {
       const c = draftClip(d, s.clipId!);
       if (!c) return;
-      // Replaying a pitch on the same step replaces it.
+      // Notes already on the step stay; replaying the same pitch there replaces it.
       c.notes = c.notes.filter((n) => !(n.pitch === pitch && Math.abs(n.start - start) < 1e-6));
       c.notes.push({ id: uid("n"), pitch, start, length: s.step * s.gate, velocity: Math.max(1, Math.min(127, velocity)) });
     });
   } else if (held.delete(pitch) && held.size === 0 && chordAt !== null) {
-    useStepRecord.setState({ cursor: chordAt + s.step });
+    useStepRecord.setState({ cursor: nextStep(chordAt) });
     chordAt = null;
   }
 }
