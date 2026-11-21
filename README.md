@@ -85,11 +85,19 @@ projet.
     d'effet, volume/pan/mute/solo/arm, volume master, tempo, transport), puis bougez un potard, un fader
     ou un bouton du clavier. Clic droit en mode learn = supprimer. Les mappings sont enregistrés avec le
     projet et listés dans Audio & MIDI settings.
-- **Plugins tiers (app de bureau, macOS)** : tous les Audio Units installés (Vital, Surge XT,
-  Zebra, Serum…) apparaissent dans le groupe « Plugins » des onglets Instruments et Effects.
+- **Plugins tiers (app de bureau)** : les plugins installés apparaissent dans le groupe « Plugins »
+  des onglets Instruments et Effects. macOS : Audio Units (Vital, Surge XT, Zebra, Serum…) et VST3 ;
+  Windows : VST3. Sur macOS, un VST3 qui existe aussi en Audio Unit n'est listé qu'une fois (l'AU est
+  préféré). Les VST3 sont cherchés dans les dossiers standards (`C:\Program Files\Common Files\VST3`,
+  `%LOCALAPPDATA%\Programs\Common\VST3` ; `/Library/Audio/Plug-Ins/VST3` et
+  `~/Library/Audio/Plug-Ins/VST3`) et dans les dossiers ajoutés dans Audio & MIDI settings →
+  « Plugin folders » (bouton « Add folder… », « Rescan » pour relancer le scan) : utile quand un plugin
+  est installé sur un autre disque. Le résultat du scan est mis en cache (`vst3-cache.json` dans le
+  dossier de config) : seuls les plugins nouveaux ou modifiés sont rechargés.
   Un clic sur un instrument le pré-écoute au clavier MIDI, un glisser ou un double-clic l'ajoute.
   Sur la page Sound, « Open editor » ouvre le plugin dans sa propre fenêtre (redimensionnable,
-  plein écran avec le bouton vert). **Ctrl+Tab** bascule entre la fenêtre principale et les plugins.
+  plein écran avec le bouton vert pour les Audio Units ; taille fixe pour les VST3 sur macOS).
+  **Ctrl+Tab** bascule entre la fenêtre principale et les plugins (macOS).
   Son état (ton patch) est sauvegardé dans le projet, et le plugin reçoit le tempo et le transport
   (LFO synchronisés).
   Les plugins sont aussi rendus dans l'export WAV.
@@ -128,7 +136,7 @@ crates/daw-core/src/         Moteur Rust partagé (bureau + navigateur)
 crates/daw-wasm/src/lib.rs   Moteur en WebAssembly (API C minimale, sans wasm-bindgen)
 public/engine-worklet.js     AudioWorklet qui héberge le moteur wasm
 src/lib/webEngine.ts         Web Audio, Web MIDI, import et export dans le navigateur
-src-tauri/src/plugins/       Hôte Audio Unit (FFI AudioToolbox, fenêtre d'édition Cocoa)
+src-tauri/src/plugins/       Hôtes Audio Unit (FFI AudioToolbox, fenêtre Cocoa) et VST3 (macOS/Windows, fenêtre Win32)
 src-tauri/src/               App de bureau
   lib.rs                     Commandes Tauri, threads de statut/enregistrement, MIDI
   model.rs                   Sous-ensemble du document utile au moteur (serde)
@@ -173,11 +181,12 @@ Les builds ne sont pas signés Apple/Microsoft : au premier téléchargement, ma
 
 ## Limites connues
 
-- Plugins : Audio Units seulement (macOS). Vital, comme la plupart des plugins, existe aussi en
-  AU. Les formats VST3 et CLAP pourront s'ajouter derrière la même interface
-  (`daw_core::dsp::registry::ExternalDevices`). Pas de plugins dans la version navigateur.
+- Plugins : Audio Units (macOS) et VST3 (macOS, Windows). Pas de CLAP, pas de plugins dans la
+  version navigateur ; l'hôte VST3 n'a pas d'éditeur sous Linux. Un plugin VST3 compilé pour une autre
+  architecture que l'app (ex. Vital Intel seul sur un Mac Apple Silicon) n'est pas chargeable. Le format
+  se branche derrière `daw_core::dsp::registry::ExternalDevices`.
 - Automation limitée au volume et au pan des pistes ; pas de pitch-bend, pas d'étirement temporel de l'audio (un clip audio garde
-  sa vitesse si le tempo change), pas de plugins VST/AU.
+  sa vitesse si le tempo change).
 - Pas de monitoring d'entrée pendant l'enregistrement audio ; la latence d'enregistrement se
   compense à la main (réglages → « Recording offset »).
 - Le limiteur introduit ~3 ms de latence non compensée.

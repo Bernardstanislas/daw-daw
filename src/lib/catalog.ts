@@ -42,7 +42,7 @@ export function getPlugin(type: string): PluginInfo | undefined {
 }
 
 export function isPluginType(type: string): boolean {
-  return type.startsWith("au:");
+  return type.startsWith("au:") || type.startsWith("vst3:");
 }
 
 /** Display name of any device (built-in spec, plugin, or saved label). */

@@ -4480,6 +4480,9 @@ input.text-input.title.tape:focus {
   gap: 6px;
   min-width: 0;
 }
+.form-row .path-row {
+  flex: 1;
+}
 .form .path-row .path {
   flex: 1;
   min-width: 0;

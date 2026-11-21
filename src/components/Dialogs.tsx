@@ -6,6 +6,7 @@ import { backend, isTauri, listen, openDialog, type AudioStatus } from "../lib/b
 import { exportMixdown, newProject } from "../lib/fileOps";
 import { TEMPLATES } from "../lib/templates";
 import { IconClose } from "./icons";
+import { loadPlugins } from "../lib/catalog";
 import { ccLabel, removeMapping, setLearnMode, setTrackChannel, targetLabel, useMidiLearn } from "../lib/midiMap";
 
 function Modal({ title, children, onClose, wide }: { title: string; children: React.ReactNode; onClose: () => void; wide?: boolean }) {
@@ -34,6 +35,7 @@ const close = () => useStore.setState({ dialog: null });
 function SettingsDialog() {
   const [st, setSt] = useState<AudioStatus | null>(null);
   const [busy, setBusy] = useState(false);
+  const [scanning, setScanning] = useState(false);
   const refresh = () => backend.getAudioStatus().then(setSt);
   useEffect(() => {
     refresh();
@@ -50,6 +52,17 @@ function SettingsDialog() {
     }
     await refresh();
     setBusy(false);
+  };
+  const pluginDirs = s.pluginDirs ?? [];
+  const rescanPlugins = async () => {
+    setScanning(true);
+    const found = await loadPlugins(true);
+    setScanning(false);
+    toast(`${found.length} plugins found`, "success");
+  };
+  const setPluginDirs = async (dirs: string[]) => {
+    await apply({ pluginDirs: dirs });
+    await rescanPlugins();
   };
   return (
     <Modal title="Audio & MIDI settings" onClose={close}>
@@ -144,6 +157,44 @@ function SettingsDialog() {
           {st.samples.missing.length === 0
             ? `Sampler and Sample Kit: ${st.samples.total} samples loaded.`
             : `${st.samples.missing.length} of ${st.samples.total} samples missing: the folder must contain instruments/*.wav and drums/*.wav (e.g. ${st.samples.missing[0]}). Missing sounds stay silent.`}
+        </div>
+        <div className="form-row">
+          <span>
+            <b>Plugin folders</b>
+          </span>
+          {isTauri && (
+            <span className="inline">
+              <button
+                className="btn small"
+                disabled={busy || scanning}
+                onClick={async () => {
+                  const d = await openDialog({ directory: true, title: "Plugin folder" });
+                  if (d?.[0] && !pluginDirs.includes(d[0])) setPluginDirs([...pluginDirs, d[0]]);
+                }}
+              >
+                Add folder…
+              </button>{" "}
+              <button className="btn small" disabled={busy || scanning} onClick={rescanPlugins}>
+                {scanning ? "Scanning…" : "Rescan"}
+              </button>
+            </span>
+          )}
+        </div>
+        {pluginDirs.map((d) => (
+          <div className="form-row" key={d}>
+            <span className="inline path-row">
+              <span className="path" title={d}>
+                {d}
+              </span>
+            </span>
+            <button className="btn small" disabled={busy || scanning} onClick={() => setPluginDirs(pluginDirs.filter((x) => x !== d))}>
+              Remove
+            </button>
+          </div>
+        ))}
+        <div className="form-info small">
+          VST3 plugins are searched in these folders and everything below them, plus the standard folders
+          {st.defaultPluginDirs.length ? `: ${st.defaultPluginDirs.join(" · ")}` : ""}.
         </div>
         <div className="form-info small">Projects, recordings and exports are stored in {st.baseDir}</div>
         {!isTauri && <div className="form-error">Running in a browser: audio is disabled (UI preview only).</div>}
