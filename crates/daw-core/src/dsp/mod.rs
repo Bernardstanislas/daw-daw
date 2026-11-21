@@ -4,10 +4,14 @@
 //! adding a new device only requires a spec + an implementation + a line in
 //! `registry.rs`.
 
+pub mod bassline;
 pub mod drums;
 pub mod effects;
+pub mod grand;
 pub mod keys;
+pub mod poly;
 pub mod registry;
+pub mod rhythm;
 pub mod sample_data;
 pub mod sampler;
 pub mod synth;

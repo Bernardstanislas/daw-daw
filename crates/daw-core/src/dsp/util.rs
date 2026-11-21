@@ -612,6 +612,58 @@ pub fn fast_sin01(phase: f32) -> f32 {
     -(0.225 * (y * y.abs() - y) + y)
 }
 
+/// Zero-delay-feedback transistor-ladder low-pass (V. Zavalishin's TPT
+/// form) with a soft-clipped input stage. `poles` = 4 gives the classic
+/// 24 dB/oct ladder, 3 the rounder 18 dB/oct "diode box" response used by
+/// acid bass machines. Resonance in [0, 1] self-oscillates near 1.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Ladder {
+    s: [f32; 4],
+    g: f32,
+    k: f32,
+}
+
+impl Ladder {
+    #[inline]
+    pub fn set(&mut self, cutoff: f32, res: f32, sr: f32) {
+        let fc = cutoff.clamp(10.0, sr * 0.45);
+        let g = fast_tan(PI * fc / sr);
+        self.g = g / (1.0 + g);
+        self.k = res.clamp(0.0, 1.0) * 3.9;
+    }
+
+    /// Processes one sample. `drive` > 0 boosts the input into the clipper.
+    #[inline]
+    pub fn process(&mut self, x: f32, poles: usize, drive: f32) -> f32 {
+        let gg = self.g;
+        let b = 1.0 - gg; // = 1 / (1 + g): weight of each stage's state
+        let n = poles.clamp(3, 4);
+        // Instantaneous response of the cascade: y_n = G^n·u + Σ.
+        let mut gn = 1.0;
+        let mut sigma = 0.0;
+        for i in 0..n {
+            sigma = sigma * gg + self.s[i] * b;
+            gn *= gg;
+        }
+        // Resonance gain compensation keeps the bass from thinning out.
+        let comp = 1.0 + self.k * 0.45;
+        let xin = soft_clip(x * (1.0 + drive) * comp) ;
+        let u = soft_clip((xin - self.k * sigma) / (1.0 + self.k * gn));
+        let mut y = u;
+        for i in 0..n {
+            let v = (y - self.s[i]) * gg;
+            let out = v + self.s[i];
+            self.s[i] = flush(out + v);
+            y = out;
+        }
+        y
+    }
+
+    pub fn reset(&mut self) {
+        self.s = [0.0; 4];
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

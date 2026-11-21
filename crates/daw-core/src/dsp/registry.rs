@@ -35,10 +35,14 @@ pub fn is_known(type_id: &str) -> bool {
 pub fn all_specs() -> Vec<&'static DeviceSpec> {
     let mut v: Vec<&'static DeviceSpec> = vec![
         &super::synth::SPEC,
+        &super::poly::SPEC,
+        &super::bassline::SPEC,
         &super::sampler::SPEC,
         &super::drums::SPEC,
         &super::sampler::KIT_SPEC,
         &super::keys::SPEC,
+        &super::grand::SPEC,
+        &super::rhythm::SPEC,
     ];
     v.extend(super::effects::SPECS.iter().copied());
     v
@@ -53,6 +57,10 @@ pub fn create_instrument(type_id: &str, sample_rate: f32) -> Option<Box<dyn Inst
         "pulse" => Some(Box::new(super::synth::PulseSynth::new(sample_rate))),
         "kit" => Some(Box::new(super::drums::DrumKit::new(sample_rate))),
         "keys" => Some(Box::new(super::keys::Keys::new(sample_rate))),
+        "poly" => Some(Box::new(super::poly::Poly80::new(sample_rate))),
+        "grand" => Some(Box::new(super::grand::Grand::new(sample_rate))),
+        "bassline" => Some(Box::new(super::bassline::Bassline::new(sample_rate))),
+        "rhythm" => Some(Box::new(super::rhythm::Rhythm::new(sample_rate))),
         "sampler" => Some(Box::new(super::sampler::Sampler::new(sample_rate))),
         "samplekit" => Some(Box::new(super::sampler::SampleKit::new(sample_rate))),
         _ => None,

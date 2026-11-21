@@ -62,7 +62,7 @@ function Group({ title, children, defaultOpen = true, count }: { title: string; 
 }
 
 function instIcon(type: string) {
-  return type === "kit" || type === "samplekit" ? <IconDrum /> : type === "keys" || type === "sampler" ? <IconPiano /> : <IconSynth />;
+  return ["kit", "samplekit", "rhythm"].includes(type) ? <IconDrum /> : ["keys", "sampler", "grand"].includes(type) ? <IconPiano /> : <IconSynth />;
 }
 
 function DeviceList({ specs, filter, kind }: { specs: DeviceSpec[]; filter: string; kind: "instrument" | "effect" }) {

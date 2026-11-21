@@ -15,8 +15,9 @@ import { formatDb, capturePointer } from "../../lib/music";
 
 function TrackIcon({ track }: { track: Track }) {
   if (track.kind === "audio") return <IconMic />;
-  if (track.instrument?.type === "kit" || track.instrument?.type === "samplekit") return <IconDrum />;
-  if (track.instrument?.type === "keys" || track.instrument?.type === "sampler") return <IconPiano />;
+  const type = track.instrument?.type ?? "";
+  if (["kit", "samplekit", "rhythm"].includes(type)) return <IconDrum />;
+  if (["keys", "sampler", "grand"].includes(type)) return <IconPiano />;
   return <IconSynth />;
 }
 
