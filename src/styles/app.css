@@ -4107,7 +4107,23 @@ input.text-input.title.tape:focus {
   width: 110px;
   margin-right: 8px;
 }
+/* The page body floats over the live spectrum of the track (or the master). */
+.sound-stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.spectrum-backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
 .sound-body {
+  position: relative;
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -4128,10 +4144,13 @@ input.text-input.title.tape:focus {
   min-width: 160px;
 }
 
-/* Devices become faceplates: parameter groups side by side, like modules. */
-.sound .device {
+/* Devices become faceplates: parameter groups side by side, like modules.
+   Smoked glass, so the spectrum behind them stays visible. */
+.sound .device,
+.sound .device.instrument {
   width: fit-content;
   max-width: 100%;
+  background: linear-gradient(rgba(28, 28, 30, 0.55), rgba(24, 24, 26, 0.5));
 }
 .sound .device.instrument {
   width: auto;

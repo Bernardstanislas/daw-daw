@@ -179,6 +179,16 @@ pub unsafe extern "C" fn dd_set_live_target(ptr: *const u8, len: usize) {
     with(|st| st.ctrl.set_live_target(if id.is_empty() { None } else { Some(id) }), ())
 }
 
+/// What the spectrum analyzer listens to: a track id, "master", or empty (off).
+///
+/// # Safety
+/// `ptr..+len` must be readable.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn dd_set_scope(ptr: *const u8, len: usize) {
+    let target = unsafe { text(ptr, len) }.to_string();
+    with(|st| st.ctrl.set_scope(daw_core::engine::controller::ScopeTarget::parse(Some(target.as_str()))), ())
+}
+
 /// Registers decoded audio for an asset id. `data` is planar f32 (`channels` × `frames`).
 ///
 /// # Safety
@@ -252,6 +262,7 @@ pub extern "C" fn dd_status() -> *const f64 {
 struct Extra {
     meters: std::collections::HashMap<String, (f32, f32)>,
     recorded: Vec<RecordedNote>,
+    spectrum: Option<Vec<f32>>,
 }
 
 #[derive(Serialize)]
@@ -276,7 +287,8 @@ pub extern "C" fn dd_poll() -> *const u8 {
                 .into_iter()
                 .map(|(track_id, e)| RecordedNote { track_id, pitch: e.pitch, velocity: e.velocity, on: e.on, beat: e.beat })
                 .collect();
-            let json = serde_json::to_vec(&Extra { meters, recorded }).unwrap_or_default();
+            let spectrum = st.ctrl.spectrum();
+            let json = serde_json::to_vec(&Extra { meters, recorded, spectrum }).unwrap_or_default();
             set_result(st, json)
         },
         std::ptr::null(),

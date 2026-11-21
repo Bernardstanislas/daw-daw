@@ -186,4 +186,6 @@ export interface EngineStatus {
   master: [number, number];
   input: [number, number];
   meters: Record<string, [number, number]>;
+  /** Spectrum of the scope source (dBFS per log band, 20 Hz – 20 kHz), when one was asked for. */
+  spectrum?: number[] | null;
 }

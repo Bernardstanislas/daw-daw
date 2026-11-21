@@ -14,6 +14,7 @@ import { MenuButton } from "./Menu";
 import { addEffectMenu, midiChannelMenu } from "./arrange/menus";
 import { useMidiLearn } from "../lib/midiMap";
 import { Meter } from "./controls";
+import { Spectrum } from "./Spectrum";
 import { IconMic, IconPlus, IconSynth } from "./icons";
 import { promptText } from "./Prompt";
 
@@ -203,12 +204,22 @@ function TrackMonitor({ track }: { track: Track }) {
   );
 }
 
+/** The scrolling body of the page, over the live spectrum of what is being worked on. */
+function SoundStage({ source, children }: { source: string; children: React.ReactNode }) {
+  return (
+    <div className="sound-stage">
+      <Spectrum source={source} />
+      <div className="sound-body">{children}</div>
+    </div>
+  );
+}
+
 function TrackSound({ track }: { track: Track }) {
   const [hot, setHot] = useState(false);
   const typing = useStore((s) => s.ui.typing);
   return (
     <>
-      <div className="sound-body">
+      <SoundStage source={track.id}>
         {track.kind === "instrument" ? (
           <div
             className={`sound-section ${hot ? "hot" : ""}`}
@@ -244,7 +255,7 @@ function TrackSound({ track }: { track: Track }) {
           </div>
         )}
         <EffectChain target={track.id} effects={track.effects} />
-      </div>
+      </SoundStage>
       {track.kind === "instrument" && typing && <Keybed key={track.id} track={track} />}
     </>
   );
@@ -306,9 +317,9 @@ export function Sound() {
         </button>
       </div>
       {showMaster ? (
-        <div className="sound-body">
+        <SoundStage source="master">
           <EffectChain target="master" effects={masterFx} />
-        </div>
+        </SoundStage>
       ) : (
         <TrackSound track={track} />
       )}

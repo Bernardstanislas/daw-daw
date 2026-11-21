@@ -1,6 +1,6 @@
 //! Lock-free state shared between the audio thread and the rest of the app.
 
-use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicUsize, Ordering};
 
 pub const MAX_TRACKS: usize = 256;
 
@@ -64,6 +64,57 @@ impl Meter {
     }
 }
 
+/// Samples kept for the spectrum analyzer (a power of two).
+pub const SCOPE_LEN: usize = 4096;
+/// `Scope::source` values that are not track handles.
+pub const SCOPE_OFF: u32 = u32::MAX;
+pub const SCOPE_MASTER: u32 = u32::MAX - 1;
+
+/// Ring buffer of the last mono samples of one source (a track or the master),
+/// read by the control thread to draw a spectrum.
+pub struct Scope {
+    /// Track handle, `SCOPE_MASTER` or `SCOPE_OFF`.
+    pub source: AtomicU32,
+    /// Total samples written (the next write goes to `pos % SCOPE_LEN`).
+    pub pos: AtomicUsize,
+    pub buf: Vec<AtomicF32>,
+}
+
+impl Default for Scope {
+    fn default() -> Self {
+        Self { source: AtomicU32::new(SCOPE_OFF), pos: AtomicUsize::new(0), buf: (0..SCOPE_LEN).map(|_| AtomicF32::default()).collect() }
+    }
+}
+
+impl Scope {
+    #[inline]
+    pub fn listens_to(&self, source: u32) -> bool {
+        self.source.load(Ordering::Relaxed) == source
+    }
+    /// Appends `l`/`r` (mixed to mono). Audio thread only.
+    #[inline]
+    pub fn write(&self, l: &[f32], r: &[f32]) {
+        let mut p = self.pos.load(Ordering::Relaxed);
+        for (a, b) in l.iter().zip(r) {
+            self.buf[p & (SCOPE_LEN - 1)].store(0.5 * (a + b));
+            p = p.wrapping_add(1);
+        }
+        self.pos.store(p, Ordering::Release);
+    }
+    /// Copies the last `SCOPE_LEN` samples, oldest first.
+    pub fn read(&self, out: &mut [f32; SCOPE_LEN]) {
+        let p = self.pos.load(Ordering::Acquire);
+        for (i, o) in out.iter_mut().enumerate() {
+            *o = self.buf[p.wrapping_add(i) & (SCOPE_LEN - 1)].load();
+        }
+    }
+    pub fn clear(&self) {
+        for v in &self.buf {
+            v.store(0.0);
+        }
+    }
+}
+
 pub struct Shared {
     /// Song position in beats.
     pub position: AtomicF64,
@@ -79,6 +130,7 @@ pub struct Shared {
     pub meters: Vec<Meter>,
     pub master: Meter,
     pub input: Meter,
+    pub scope: Scope,
 }
 
 impl Shared {
@@ -94,6 +146,7 @@ impl Shared {
             meters: (0..MAX_TRACKS).map(|_| Meter::default()).collect(),
             master: Meter::default(),
             input: Meter::default(),
+            scope: Scope::default(),
         };
         s.sample_rate.store(sample_rate);
         s

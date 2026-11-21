@@ -150,10 +150,12 @@ function onWorkletMessage(m: { type: string; status?: number[]; extra?: Uint8Arr
   if (m.type !== "status" || !m.status) return;
   let meters: Record<string, [number, number]> = {};
   let recorded: unknown[] = [];
+  let spectrum: number[] | null = null;
   try {
     const x = JSON.parse(dec.decode(m.extra));
     meters = x.meters ?? {};
     recorded = x.recorded ?? [];
+    spectrum = x.spectrum ?? null;
   } catch {
     /* empty poll */
   }
@@ -169,6 +171,7 @@ function onWorkletMessage(m: { type: string; status?: number[]; extra?: Uint8Arr
     master: [s[5], s[6]],
     input: [0, 0],
     meters,
+    spectrum,
   };
   emit("engine-status", status);
 }
@@ -192,6 +195,11 @@ export function liveNote(pitch: number, velocity: number, on: boolean, trackId: 
 
 export function setLiveTarget(trackId: string | null) {
   post({ type: "target", track: enc.encode(trackId ?? "") });
+}
+
+/** What the spectrum analyzer listens to: a track id, "master", or null (off). */
+export function setScope(target: string | null) {
+  post({ type: "scope", target: enc.encode(target ?? "") });
 }
 
 function sendAsset(id: string, sampleRate: number, channels: Float32Array[]) {

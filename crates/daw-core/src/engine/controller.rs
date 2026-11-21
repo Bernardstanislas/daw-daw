@@ -9,7 +9,8 @@ use rtrb::{Consumer, Producer, RingBuffer};
 
 use super::Engine;
 use super::commands::{Command, FxTarget, Garbage, Handle, RecEvent};
-use super::shared::{MAX_TRACKS, Shared};
+use super::shared::{MAX_TRACKS, SCOPE_MASTER, SCOPE_OFF, Shared};
+use super::spectrum::Analyzer;
 use super::track::{AudioClipRt, FxSlot, NoteRt, TrackRt};
 use crate::assets::AssetCache;
 use crate::dsp::{db_to_gain, registry};
@@ -58,6 +59,29 @@ pub struct Controller {
     overflow: bool,
     /// Offline render (export): external plugins get private instances.
     pub offline: bool,
+    /// What the spectrum analyzer listens to.
+    scope: ScopeTarget,
+    analyzer: Analyzer,
+}
+
+/// Source of the spectrum analyzer.
+#[derive(Clone, PartialEq, Default)]
+pub enum ScopeTarget {
+    #[default]
+    Off,
+    Master,
+    Track(String),
+}
+
+impl ScopeTarget {
+    /// `None` = off, `"master"` = the master bus, anything else = a track id.
+    pub fn parse(target: Option<&str>) -> Self {
+        match target {
+            None | Some("") => Self::Off,
+            Some("master") => Self::Master,
+            Some(id) => Self::Track(id.to_string()),
+        }
+    }
 }
 
 fn make_rings(sr: f32, shared: Arc<Shared>) -> (Producer<Command>, Consumer<Garbage>, Consumer<RecEvent>, Engine) {
@@ -88,6 +112,8 @@ impl Controller {
             synced_once: false,
             overflow: false,
             offline: false,
+            scope: ScopeTarget::Off,
+            analyzer: Analyzer::default(),
         };
         (c, engine)
     }
@@ -187,6 +213,30 @@ impl Controller {
 
     pub fn project(&self) -> &Project {
         &self.project
+    }
+
+    /// Chooses what the spectrum analyzer listens to.
+    pub fn set_scope(&mut self, target: ScopeTarget) {
+        if target != self.scope {
+            self.scope = target;
+            self.shared.scope.clear();
+        }
+    }
+
+    /// Spectrum of the scope source (dBFS per log band, 20 Hz – 20 kHz), `None` when off.
+    pub fn spectrum(&mut self) -> Option<Vec<f32>> {
+        use std::sync::atomic::Ordering;
+        // Resolved on every call: handles change when tracks come and go.
+        let source = match &self.scope {
+            ScopeTarget::Off => SCOPE_OFF,
+            ScopeTarget::Master => SCOPE_MASTER,
+            ScopeTarget::Track(id) => self.handle_of(id).unwrap_or(SCOPE_OFF),
+        };
+        self.shared.scope.source.store(source, Ordering::Relaxed);
+        if source == SCOPE_OFF {
+            return None;
+        }
+        Some(self.analyzer.analyze(&self.shared.scope, self.sample_rate))
     }
 
     pub fn set_live_target(&mut self, track_id: Option<String>) {

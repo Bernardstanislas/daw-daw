@@ -1706,6 +1706,35 @@ mod tests {
         inst.all_notes_off(true);
     }
 
+    /// A plugin synth on a track shows up in the spectrum analyzer like a built-in one.
+    #[test]
+    fn plugin_instrument_feeds_the_spectrum() {
+        use daw_core::engine::commands::Command;
+        use daw_core::engine::controller::{Controller, ScopeTarget};
+        use daw_core::model::{Project, Track, TrackKind};
+        let _g = SERIAL.lock();
+        let Some(synth) = find_synth() else {
+            eprintln!("no loadable VST3 instrument installed, skipping");
+            return;
+        };
+        daw_core::dsp::registry::set_external(Box::new(Provider));
+        let (mut c, mut engine) = Controller::new(48_000.0);
+        let track = Track { id: "synth".into(), kind: TrackKind::Instrument, instrument: Some(device("test-vst3-scope", &synth)), ..Default::default() };
+        c.sync(&Project { bpm: 120.0, tracks: vec![track], ..Default::default() });
+        c.set_scope(ScopeTarget::Track("synth".into()));
+        assert!(c.spectrum().is_some_and(|s| s.iter().all(|&v| v <= -119.0)), "silent before the note");
+        let handle = c.handle_of("synth").expect("track built");
+        c.send(Command::LiveNote { handle: Some(handle), pitch: 48, velocity: 0.9, on: true, record: false });
+        let mut out = vec![0f32; 256 * 2];
+        for _ in 0..60 {
+            engine.process(&mut out, 2);
+        }
+        let s = c.spectrum().expect("scope on");
+        let (band, db) = s.iter().enumerate().fold((0, f32::MIN), |m, (i, &v)| if v > m.1 { (i, v) } else { m });
+        eprintln!("{} through the engine: spectrum peak {db:.1} dB in band {band}/{}", synth.name, s.len());
+        assert!(db > -50.0, "the plugin's note reaches the spectrum ({db} dB)");
+    }
+
     #[test]
     fn vital_state_round_trips() {
         let _g = SERIAL.lock();

@@ -249,6 +249,12 @@ fn live_note(state: State<'_, AppState>, pitch: u8, velocity: f32, on: bool, tra
     c.send(Command::LiveNote { handle, pitch: pitch.min(127), velocity: velocity.clamp(0.0, 1.0), on, record });
 }
 
+/// What the spectrum analyzer listens to: a track id, "master", or nothing (off).
+#[tauri::command]
+fn set_scope(state: State<'_, AppState>, target: Option<String>) {
+    state.ctrl.lock().set_scope(daw_core::engine::controller::ScopeTarget::parse(target.as_deref()));
+}
+
 #[tauri::command]
 fn set_live_target(state: State<'_, AppState>, track_id: Option<String>) {
     state.ctrl.lock().set_live_target(track_id);
@@ -499,6 +505,8 @@ struct EngineStatus {
     master: (f32, f32),
     input: (f32, f32),
     meters: HashMap<String, (f32, f32)>,
+    /// Spectrum of the scope source (dBFS per log band), when the UI asked for one.
+    spectrum: Option<Vec<f32>>,
 }
 
 #[derive(Serialize, Clone)]
@@ -531,6 +539,7 @@ fn spawn_status_thread(app: AppHandle, ctrl: Arc<Mutex<Controller>>) {
                     c.collect_garbage();
                     let s = c.shared.clone();
                     let meters = c.track_meters().into_iter().map(|(id, l, r)| (id, (l, r))).collect();
+                    let spectrum = c.spectrum();
                     let notes: Vec<RecordedNote> = c
                         .drain_recorded()
                         .into_iter()
@@ -546,6 +555,7 @@ fn spawn_status_thread(app: AppHandle, ctrl: Arc<Mutex<Controller>>) {
                             master: s.master.take(),
                             input: s.input.take(),
                             meters,
+                            spectrum,
                         },
                         notes,
                     )
@@ -685,6 +695,7 @@ pub fn run() {
             set_input_enabled,
             live_note,
             set_live_target,
+            set_scope,
             import_audio,
             load_assets,
             preview_file,

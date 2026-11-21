@@ -5,6 +5,7 @@ pub mod commands;
 pub mod controller;
 pub mod metronome;
 pub mod shared;
+pub mod spectrum;
 pub mod track;
 #[cfg(test)]
 mod tests;
@@ -689,6 +690,8 @@ impl Engine {
             for i in 0..n {
                 let l = tl[i] * t.gain_l.next();
                 let r = tr[i] * t.gain_r.next();
+                tl[i] = l;
+                tr[i] = r;
                 pl = pl.max(l.abs());
                 pr = pr.max(r.abs());
                 self.bus_l[i] += l;
@@ -696,6 +699,10 @@ impl Engine {
             }
             if (t.handle as usize) < self.shared.meters.len() {
                 self.shared.meters[t.handle as usize].feed(pl, pr);
+            }
+            if self.shared.scope.listens_to(t.handle) {
+                // Post-fader, like the meter (the loop above left the faded signal in tl/tr).
+                self.shared.scope.write(&tl[..n], &tr[..n]);
             }
         }
         live.clear();
@@ -714,6 +721,9 @@ impl Engine {
                 let g = self.master_gain.next();
                 bl[i] *= g;
                 br[i] *= g;
+            }
+            if self.shared.scope.listens_to(shared::SCOPE_MASTER) {
+                self.shared.scope.write(bl, br);
             }
         }
 

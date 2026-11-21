@@ -104,6 +104,9 @@ const web = (() => {
         case "live_note":
           W.liveNote(args.pitch as number, args.velocity as number, args.on as boolean, (args.trackId as string | null) ?? null);
           return undefined as T;
+        case "set_scope":
+          W.setScope((args.target as string | null) ?? null);
+          return undefined as T;
         case "set_live_target":
           W.setLiveTarget((args.trackId as string | null) ?? null);
           return undefined as T;
@@ -194,6 +197,8 @@ export const backend = {
   liveNote: (pitch: number, velocity: number, on: boolean, trackId: string | null = null) =>
     invoke<void>("live_note", { pitch, velocity, on, trackId }),
   setLiveTarget: (trackId: string | null) => invoke<void>("set_live_target", { trackId }),
+  /** Spectrum analyzer source: a track id, "master", or null (off). */
+  setScope: (target: string | null) => invoke<void>("set_scope", { target }),
   importAudio: (id: string, path: string) => invoke<AssetInfo>("import_audio", { id, path }),
   loadAssets: (assets: AssetRef[]) =>
     invoke<{ id: string; info: AssetInfo | null; error: string | null }[]>("load_assets", {
