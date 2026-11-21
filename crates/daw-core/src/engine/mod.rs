@@ -60,6 +60,8 @@ struct Transport {
     loop_enabled: bool,
     loop_start: f64,
     loop_end: f64,
+    /// Keep looping while recording (takes wrap around the loop).
+    loop_overdub: bool,
     /// Timeline position at which the count-in ends (recording starts).
     count_in_until: Option<f64>,
     record_requested: bool,
@@ -118,6 +120,7 @@ impl Engine {
                 loop_enabled: false,
                 loop_start: 0.0,
                 loop_end: 16.0,
+                loop_overdub: false,
                 count_in_until: None,
                 record_requested: false,
                 recording: false,
@@ -247,11 +250,20 @@ impl Engine {
                 }
                 Command::SetTempo(bpm) => self.transport.bpm = bpm.clamp(20.0, 400.0),
                 Command::SetBeatsPerBar(b) => self.transport.beats_per_bar = b.max(0.25),
-                Command::SetLoop { enabled, start, end } => {
+                Command::SetLoop { enabled, start, end, overdub } => {
                     // Loops shorter than a sixteenth are ignored (keeps segments per block bounded).
                     self.transport.loop_enabled = enabled && end > start + 0.25;
                     self.transport.loop_start = start;
                     self.transport.loop_end = end;
+                    self.transport.loop_overdub = overdub;
+                }
+                Command::PunchOut => {
+                    self.transport.record_requested = false;
+                    self.transport.recording = false;
+                    self.shared.recording.store(false, Ordering::Release);
+                    if self.transport.count_in_until.take().is_some() {
+                        self.shared.count_in.store(false, Ordering::Relaxed);
+                    }
                 }
                 Command::SetMetronome { enabled, volume, count_in_bars } => {
                     self.metronome.enabled = enabled;
@@ -460,9 +472,9 @@ impl Engine {
                             boundary = Some(ci);
                         }
                     }
-                // No loop while recording: takes are linear.
+                // No loop while recording (takes are linear), unless the loop overdubs.
                 let looping = self.transport.loop_enabled
-                    && !self.transport.recording
+                    && (!self.transport.recording || self.transport.loop_overdub)
                     && self.transport.count_in_until.is_none()
                     && pos < self.transport.loop_end;
                 if looping {

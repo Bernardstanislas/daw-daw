@@ -20,7 +20,7 @@ use assets::AssetInfo;
 use audio_io::{AudioHost, Capture, EngineSlot, OutputInfo, RecordTarget};
 use engine::commands::Command;
 use engine::controller::Controller;
-use midi_in::{MidiInputs, MidiMsg};
+use midi_in::{Intercept, MidiInputs, MidiMsg};
 use model::{AssetRef, Project};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -56,6 +56,7 @@ pub struct AppState {
     output: Mutex<Option<OutputInfo>>,
     input: Mutex<Option<(u32, u16)>>,
     midi: Mutex<Option<MidiInputs>>,
+    intercept: Arc<Mutex<Intercept>>,
     audio_error: Mutex<Option<String>>,
     samples: Mutex<SamplesStatus>,
 }
@@ -188,6 +189,7 @@ fn transport(state: State<'_, AppState>, action: String, position: Option<f64>) 
             }
         }
         "seek" => c.send(Command::Seek(position.unwrap_or(0.0))),
+        "punch_out" => c.send(Command::PunchOut),
         "panic" => c.send(Command::AllNotesOff),
         _ => return Err(format!("unknown transport action {action}")),
     }
@@ -253,6 +255,14 @@ fn live_note(state: State<'_, AppState>, pitch: u8, velocity: f32, on: bool, tra
 #[tauri::command]
 fn set_scope(state: State<'_, AppState>, target: Option<String>) {
     state.ctrl.lock().set_scope(daw_core::engine::controller::ScopeTarget::parse(target.as_deref()));
+}
+
+/// Notes kept away from the instruments and only reported to the UI (Loop page).
+#[tauri::command]
+fn set_midi_intercept(state: State<'_, AppState>, notes: Vec<(u8, u8)>, all: bool) {
+    let mut i = state.intercept.lock();
+    i.notes = notes.into_iter().collect();
+    i.all = all;
 }
 
 #[tauri::command]
@@ -431,7 +441,7 @@ fn rescan_midi(app: AppHandle, state: State<'_, AppState>) -> Vec<String> {
     if let Some(m) = state.midi.lock().take() {
         m.close();
     }
-    let m = connect_midi(&app, state.ctrl.clone());
+    let m = connect_midi(&app, state.ctrl.clone(), state.intercept.clone());
     let names = m.port_names.clone();
     *state.midi.lock() = Some(m);
     names
@@ -569,17 +579,24 @@ fn spawn_status_thread(app: AppHandle, ctrl: Arc<Mutex<Controller>>) {
         .expect("spawn status thread");
 }
 
-fn connect_midi(app: &AppHandle, ctrl: Arc<Mutex<Controller>>) -> MidiInputs {
+fn connect_midi(app: &AppHandle, ctrl: Arc<Mutex<Controller>>, intercept: Arc<Mutex<Intercept>>) -> MidiInputs {
     let app = app.clone();
     MidiInputs::connect_all(Arc::new(move |m: MidiMsg| {
         match m {
+            // Intercepted notes reach the UI only (flag in the payload), never an instrument.
             MidiMsg::NoteOn { channel, pitch, velocity } => {
-                ctrl.lock().midi_note(channel, pitch, velocity as f32 / 127.0, true);
-                let _ = app.emit("midi-input", (pitch, velocity, true, channel));
+                let taken = intercept.lock().note_on(channel, pitch);
+                if !taken {
+                    ctrl.lock().midi_note(channel, pitch, velocity as f32 / 127.0, true);
+                }
+                let _ = app.emit("midi-input", (pitch, velocity, true, channel, taken));
             }
             MidiMsg::NoteOff { channel, pitch } => {
-                ctrl.lock().midi_note(channel, pitch, 0.0, false);
-                let _ = app.emit("midi-input", (pitch, 0u8, false, channel));
+                let taken = intercept.lock().note_off(channel, pitch);
+                if !taken {
+                    ctrl.lock().midi_note(channel, pitch, 0.0, false);
+                }
+                let _ = app.emit("midi-input", (pitch, 0u8, false, channel, taken));
             }
             // Controllers are mapped to parameters by the UI (MIDI learn).
             MidiMsg::Control { channel, cc, value } => {
@@ -658,7 +675,8 @@ pub fn run() {
                     .expect("spawn plugin editor watcher");
             }
 
-            let midi = connect_midi(&handle, ctrl.clone());
+            let intercept = Arc::new(Mutex::new(Intercept::default()));
+            let midi = connect_midi(&handle, ctrl.clone(), intercept.clone());
             spawn_status_thread(handle.clone(), ctrl.clone());
 
             app.manage(AppState {
@@ -671,6 +689,7 @@ pub fn run() {
                 output: Mutex::new(None),
                 input: Mutex::new(None),
                 midi: Mutex::new(Some(midi)),
+                intercept,
                 audio_error: Mutex::new(None),
                 samples: Mutex::new(samples),
             });
@@ -695,6 +714,7 @@ pub fn run() {
             set_input_enabled,
             live_note,
             set_live_target,
+            set_midi_intercept,
             set_scope,
             import_audio,
             load_assets,

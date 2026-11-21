@@ -25,6 +25,8 @@ pub struct LoopRegion {
     pub enabled: bool,
     pub start: f64,
     pub end: f64,
+    /// Recording keeps cycling the loop (Loop page overdub) instead of running past its end.
+    pub overdub: bool,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]

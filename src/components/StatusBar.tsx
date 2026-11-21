@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PAGES, setUi, useStore, type Page } from "../lib/store";
-import { IconArrange, IconMixer, IconSynth } from "./icons";
+import { IconArrange, IconLoop, IconMixer, IconSynth } from "./icons";
 import { useTyping } from "../lib/keyboard";
 import { useTransport } from "../lib/engine";
 import { backend, isTauri, type AudioStatus } from "../lib/backend";
@@ -10,11 +10,12 @@ import { noteName } from "../lib/music";
 
 const PAGE_ICONS: Record<Page, React.ReactNode> = {
   arrange: <IconArrange size={14} />,
+  loop: <IconLoop size={14} />,
   sound: <IconSynth size={14} />,
   mix: <IconMixer size={14} />,
 };
 
-/** Page selector, bottom centre: Arrange · Sound · Mix, in the order of the work. */
+/** Page selector, bottom centre: Arrange · Loop · Sound · Mix, in the order of the work. */
 function PageTabs() {
   const page = useStore((s) => s.ui.page);
   return (

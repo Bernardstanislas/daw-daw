@@ -4,7 +4,7 @@
 
 import { create } from "zustand";
 import { produce, type Draft } from "immer";
-import type { MidiMapping, MidiTarget, Project } from "./types";
+import type { LiveAction, MidiMapping, MidiTarget, Project } from "./types";
 import { HISTORY_LIMIT, commit, findTrack, toast, useStore } from "./store";
 import { listen } from "./backend";
 import { getSpec, deviceName } from "./catalog";
@@ -47,6 +47,8 @@ export function targetKey(t: MidiTarget): string {
       return `track:${t.trackId}:${t.prop}`;
     case "transport":
       return `transport:${t.action}`;
+    case "live":
+      return `live:${t.action}`;
     default:
       return t.kind;
   }
@@ -58,6 +60,7 @@ export function parseTargetKey(k: string): MidiTarget | null {
   if (kind === "track" && a && b) return { kind, trackId: a, prop: b as "volume" };
   if (kind === "transport" && a) return { kind, action: a as "play" };
   if (kind === "master" || kind === "tempo") return { kind };
+  if (kind === "live" && a && a in LIVE_NAMES) return { kind, action: a as LiveAction };
   return null;
 }
 
@@ -80,6 +83,17 @@ function draftDevice(p: Draft<Project>, deviceId: string) {
   return p.master.effects.find((d) => d.id === deviceId);
 }
 
+export const LIVE_NAMES: Record<LiveAction, string> = {
+  undoLayer: "Undo layer",
+  length: "Loop length",
+  prevTrack: "Previous track",
+  nextTrack: "Next track",
+  transpose: "Keys set transpose",
+};
+
+/** Loop page buttons: the handler gets every value (press and release). Set by live.ts. */
+export const liveButtons: { handler: ((action: LiveAction, value: number, prev: number) => void) | null } = { handler: null };
+
 const PROP_NAMES = { volume: "Volume", pan: "Pan", mute: "Mute", solo: "Solo", armed: "Arm" };
 
 /** Human name of a target, or null when it no longer exists. */
@@ -101,6 +115,8 @@ export function targetLabel(p: Project, t: MidiTarget): string | null {
       return "Tempo";
     case "transport":
       return `Transport · ${t.action[0].toUpperCase()}${t.action.slice(1)}`;
+    case "live":
+      return `Loop · ${LIVE_NAMES[t.action]}`;
   }
 }
 
@@ -199,6 +215,9 @@ function applyMapping(m: MidiMapping, value: number) {
       else if (t.action === "metronome") commit((p) => void (p.metronome.enabled = !p.metronome.enabled));
       return;
     }
+    case "live":
+      liveButtons.handler?.(t.action, value, prev);
+      return;
   }
 }
 
@@ -264,7 +283,9 @@ function onNote(pitch: number, velocity: number, on: boolean, channel: number) {
 
 export function initMidiControl() {
   listen<[number, number, number]>("midi-cc", ([ch, cc, v]) => onCC(ch, cc, v));
-  listen<[number, number, boolean, number]>("midi-input", ([pitch, vel, on, ch]) => onNote(pitch, vel, on, ch ?? 1));
+  listen<[number, number, boolean, number, boolean?]>("midi-input", ([pitch, vel, on, ch, taken]) => {
+    if (!taken) onNote(pitch, vel, on, ch ?? 1);
+  });
 
   // Learn mode: clicking a learnable control arms it instead of using it;
   // right-click removes its mapping. Escape leaves the mode.

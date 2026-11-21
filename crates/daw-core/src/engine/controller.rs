@@ -515,6 +515,7 @@ impl Controller {
                 enabled: p.loop_region.enabled,
                 start: p.loop_region.start,
                 end: p.loop_region.end,
+                overdub: p.loop_region.overdub,
             });
         }
         if first || p.metronome != old.metronome {

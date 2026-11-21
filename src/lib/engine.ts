@@ -111,7 +111,8 @@ let lastTarget: string | null | undefined;
 function updateLiveTarget() {
   const s = useStore.getState();
   const tracks = s.project.tracks;
-  const armed = tracks.find((t) => t.armed && t.kind === "instrument");
+  // A track bound to a MIDI channel gets its notes anyway: it never takes the keyboard.
+  const armed = tracks.find((t) => t.armed && t.kind === "instrument" && !t.midiChannel);
   const sel = findTrack(s.project, s.selection.trackId);
   // Auditioning an instrument takes over the MIDI keyboard until it stops.
   const target = s.preview ? PREVIEW_TRACK_ID : (armed?.id ?? (sel?.kind === "instrument" ? sel.id : null));
@@ -154,14 +155,18 @@ export function initEngineBridge() {
   listen<EngineStatus>("engine-status", (st) => {
     const prev = useTransport.getState();
     useTransport.setState({ ...st, receivedAt: performance.now() });
-    if (prev.recording && !st.recording) finishMidiTake();
+    if (prev.recording && !st.recording && !takeHooks.finish?.()) finishMidiTake();
     if (!prev.recording && st.recording) {
       useTransport.setState({ takeStart: st.position, takeNotes: {} });
     }
   });
-  listen<RecordedNote[]>("midi-recorded", onRecordedNotes);
+  listen<RecordedNote[]>("midi-recorded", (evts) => {
+    if (!takeHooks.capture?.(evts)) onRecordedNotes(evts);
+  });
   listen<AudioRecorded>("audio-recorded", onAudioRecorded);
-  listen<[number, number, boolean]>("midi-input", ([pitch, velocity, on]) => {
+  listen<[number, number, boolean, number?, boolean?]>("midi-input", ([pitch, velocity, on, , taken]) => {
+    // Notes intercepted for the UI (Loop page pads, transpose keys) are not played notes.
+    if (taken) return;
     const notes = new Set(useTransport.getState().liveNotes);
     if (on) notes.add(pitch);
     else notes.delete(pitch);
@@ -169,6 +174,13 @@ export function initEngineBridge() {
     notifyLive(pitch, velocity, on);
   });
 }
+
+/** Lets the Loop page take over recording: `capture` / `finish` return true when they handled it. */
+export const takeHooks: {
+  record: (() => boolean) | null;
+  capture: ((evts: RecordedNote[]) => boolean) | null;
+  finish: (() => boolean) | null;
+} = { record: null, capture: null, finish: null };
 
 // ------------------------------------------------------------------ live note listeners
 
@@ -214,6 +226,7 @@ export function seek(beat: number) {
 }
 
 export async function record() {
+  if (takeHooks.record?.()) return;
   const t = useTransport.getState();
   if (t.recording || t.countIn) {
     backend.stop();

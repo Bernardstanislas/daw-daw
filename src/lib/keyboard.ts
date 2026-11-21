@@ -167,7 +167,7 @@ function onKeyDown(e: KeyboardEvent) {
   }
 
   // Pages, by key position so that it also works on layouts whose digit row needs Shift (AZERTY).
-  const page = PAGES[["Digit1", "Digit2", "Digit3"].indexOf(e.code)];
+  const page = PAGES[["Digit1", "Digit2", "Digit3", "Digit4"].indexOf(e.code)];
   if (page && !e.altKey) {
     setUi({ page: page.id });
     return;

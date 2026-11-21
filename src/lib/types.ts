@@ -32,6 +32,10 @@ export interface Clip {
   fadeIn: number;
   fadeOut: number;
   color?: string;
+  /** Written by the Loop page: the clip that holds a track's loop. */
+  live?: boolean;
+  /** Loop page: semitones the notes of the live clip were transposed by. */
+  transpose?: number;
 }
 
 export interface DeviceState {
@@ -108,7 +112,8 @@ export interface Project {
   timeSigNum: number;
   timeSigDen: number;
   key: string;
-  loop: { enabled: boolean; start: number; end: number };
+  /** `overdub`: recording keeps cycling the loop (Loop page) instead of running past its end. */
+  loop: { enabled: boolean; start: number; end: number; overdub?: boolean };
   metronome: { enabled: boolean; volume: number; countInBars: number };
   tracks: Track[];
   master: { volume: number; effects: DeviceState[] };
@@ -124,7 +129,11 @@ export type MidiTarget =
   | { kind: "track"; trackId: string; prop: "volume" | "pan" | "mute" | "solo" | "armed" }
   | { kind: "master" }
   | { kind: "tempo" }
-  | { kind: "transport"; action: "play" | "stop" | "record" | "loop" | "metronome" };
+  | { kind: "transport"; action: "play" | "stop" | "record" | "loop" | "metronome" }
+  | { kind: "live"; action: LiveAction };
+
+/** Loop page commands a keyboard button can trigger. */
+export type LiveAction = "undoLayer" | "length" | "prevTrack" | "nextTrack" | "transpose";
 
 export interface MidiMapping {
   id: string;

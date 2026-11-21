@@ -92,7 +92,7 @@ const web = (() => {
           return undefined as T;
         case "transport": {
           const a = args.action as string;
-          W.transport(a === "play" ? 0 : a === "stop" ? 1 : a === "seek" ? 2 : 4, (args.position as number) ?? 0);
+          W.transport(a === "play" ? 0 : a === "stop" ? 1 : a === "seek" ? 2 : a === "punch_out" ? 5 : 4, (args.position as number) ?? 0);
           return undefined as T;
         }
         case "record":
@@ -106,6 +106,9 @@ const web = (() => {
           return undefined as T;
         case "set_scope":
           W.setScope((args.target as string | null) ?? null);
+          return undefined as T;
+        case "set_midi_intercept":
+          W.setMidiIntercept(args.notes as [number, number][], args.all as boolean);
           return undefined as T;
         case "set_live_target":
           W.setLiveTarget((args.trackId as string | null) ?? null);
@@ -192,6 +195,10 @@ export const backend = {
   stop: () => invoke<void>("transport", { action: "stop" }),
   seek: (position: number) => invoke<void>("transport", { action: "seek", position }),
   panic: () => invoke<void>("transport", { action: "panic" }),
+  /** Ends the take, keeps playing. */
+  punchOut: () => invoke<void>("transport", { action: "punch_out" }),
+  /** MIDI notes ([channel, pitch]) kept from the instruments and only reported to the UI; `all` = every note. */
+  setMidiIntercept: (notes: [number, number][], all: boolean) => invoke<void>("set_midi_intercept", { notes, all }),
   record: (audioTrack: string | null, takeName: string | null) => invoke<void>("record", { audioTrack, takeName }),
   setInputEnabled: (enabled: boolean) => invoke<void>("set_input_enabled", { enabled }),
   liveNote: (pitch: number, velocity: number, on: boolean, trackId: string | null = null) =>
