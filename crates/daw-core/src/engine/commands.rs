@@ -22,7 +22,9 @@ pub enum Command {
     Record,
     SetTempo(f64),
     SetBeatsPerBar(f64),
-    SetLoop { enabled: bool, start: f64, end: f64 },
+    SetLoop { enabled: bool, start: f64, end: f64, overdub: bool },
+    /// Ends the take but keeps playing (Loop page: record → play).
+    PunchOut,
     SetMetronome { enabled: bool, volume: f32, count_in_bars: u32 },
     AddTrack(Box<TrackRt>),
     RemoveTrack(Handle),

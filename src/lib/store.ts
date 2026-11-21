@@ -9,9 +9,10 @@ import type { SnapValue } from "./music";
 export type BottomPanel = "editor" | null;
 
 /** Pages: one full-window workspace per stage of the work, all on the same project and transport. */
-export type Page = "arrange" | "sound" | "mix";
+export type Page = "arrange" | "loop" | "sound" | "mix";
 export const PAGES: { id: Page; label: string; hint: string }[] = [
   { id: "arrange", label: "Arrange", hint: "Timeline, clips and piano roll" },
+  { id: "loop", label: "Loop", hint: "Play live on a loop: record, overdub, mute tracks with the pads" },
   { id: "sound", label: "Sound", hint: "Instrument and effect chain of one track" },
   { id: "mix", label: "Mix", hint: "Console: levels, pan and inserts" },
 ];

@@ -229,7 +229,7 @@ fn note_at_loop_end_is_not_stuck() {
     for &(sr, bpm) in &[(44_100u32, 120.0), (48_000, 120.0), (48_000, 97.0), (44_100, 140.0)] {
         let mut p = base_project();
         p.bpm = bpm;
-        p.loop_region = LoopRegion { enabled: true, start: 0.0, end: 8.0 };
+        p.loop_region = LoopRegion { enabled: true, start: 0.0, end: 8.0, overdub: false };
         // Only note: exactly on the loop end → must never sound while looping.
         p.tracks = vec![midi_track("t", "pulse", vec![midi_clip(0.0, 16.0, vec![note(60, 8.0, 1.0)])])];
         let (mut c, mut e) = crate::engine::controller::Controller::new(sr as f32);
@@ -294,4 +294,67 @@ fn midi_channel_routes_notes_to_its_track() {
     }
     let meters: HashMap<String, (f32, f32)> = c.track_meters().into_iter().map(|(id, l, r)| (id, (l, r))).collect();
     assert!(meters["keys"].0 > 0.01, "unclaimed channel plays the live target");
+}
+
+/// Records for 3 s (6 beats at 120 bpm) on a 2-beat loop starting at `start`.
+fn record_on_loop(overdub: bool) -> (f64, Vec<f64>) {
+    use crate::engine::commands::Command;
+    let (mut c, mut e) = crate::engine::controller::Controller::new(48_000.0);
+    let mut p = base_project();
+    p.metronome.count_in_bars = 0;
+    p.loop_region = LoopRegion { enabled: true, start: 4.0, end: 6.0, overdub };
+    let mut t = midi_track("t", "pulse", vec![]);
+    t.armed = true;
+    p.tracks = vec![t];
+    c.sync(&p);
+    c.set_live_target(Some("t".into()));
+    c.send(Command::Seek(4.0));
+    c.send(Command::Record);
+    let mut buf = vec![0f32; 480 * 2];
+    let mut beats = Vec::new();
+    // A note every half second (one beat).
+    for i in 0..300 {
+        if i % 50 == 0 {
+            c.midi_note(1, 60, 1.0, true);
+        }
+        if i % 50 == 25 {
+            c.midi_note(1, 60, 0.0, false);
+        }
+        e.process(&mut buf, 2);
+        for (_, ev) in c.drain_recorded() {
+            if ev.on {
+                beats.push(ev.beat);
+            }
+        }
+    }
+    (c.shared.position.load(), beats)
+}
+
+#[test]
+fn takes_are_linear_unless_the_loop_overdubs() {
+    let (pos, beats) = record_on_loop(false);
+    assert!(pos > 9.9, "linear take runs past the loop: {pos}");
+    assert!(beats.iter().any(|&b| b > 6.0));
+    let (pos, beats) = record_on_loop(true);
+    assert!((4.0..6.0).contains(&pos), "overdub keeps cycling: {pos}");
+    assert_eq!(beats.len(), 6);
+    assert!(beats.iter().all(|&b| (4.0..6.0).contains(&b)), "recorded beats stay in the loop: {beats:?}");
+}
+
+#[test]
+fn punch_out_keeps_playing() {
+    use crate::engine::commands::Command;
+    use std::sync::atomic::Ordering;
+    let (mut c, mut e) = crate::engine::controller::Controller::new(48_000.0);
+    let mut p = base_project();
+    p.metronome.count_in_bars = 0;
+    c.sync(&p);
+    c.send(Command::Record);
+    let mut buf = vec![0f32; 480 * 2];
+    e.process(&mut buf, 2);
+    assert!(c.shared.recording.load(Ordering::Relaxed));
+    c.send(Command::PunchOut);
+    e.process(&mut buf, 2);
+    assert!(!c.shared.recording.load(Ordering::Relaxed));
+    assert!(c.shared.playing.load(Ordering::Relaxed));
 }

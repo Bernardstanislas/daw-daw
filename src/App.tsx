@@ -7,6 +7,7 @@ import { Arrange } from "./components/arrange/Arrange";
 import { Editor } from "./components/editor/Editor";
 import { Mixer } from "./components/Mixer";
 import { Sound } from "./components/Sound";
+import { Loop } from "./components/Loop";
 import { Dialogs } from "./components/Dialogs";
 import { ContextMenuHost } from "./components/Menu";
 import { PromptHost } from "./components/Prompt";
@@ -145,6 +146,7 @@ export default function App() {
               <BottomPanel />
             </>
           )}
+          {page === "loop" && <Loop />}
           {page === "sound" && <Sound />}
           {page === "mix" && <Mixer />}
         </div>

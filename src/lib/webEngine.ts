@@ -182,7 +182,7 @@ export function syncProject(p: Project) {
   post({ type: "sync", bytes: enc.encode(JSON.stringify(p)) });
 }
 
-/** 0 play · 1 stop · 2 seek · 3 record · 4 panic */
+/** 0 play · 1 stop · 2 seek · 3 record · 4 panic · 5 punch out */
 export function transport(cmd: number, position = 0) {
   if (cmd === 0 || cmd === 3) ctx?.resume();
   post({ type: "transport", cmd, position });
@@ -284,17 +284,34 @@ export function rescanMidi(): string[] {
   return midiPorts;
 }
 
+// Notes the UI takes for itself (see Intercept in src-tauri/src/midi_in.rs).
+let interceptNotes = new Set<string>();
+let interceptAll = false;
+const interceptHeld = new Set<string>();
+
+export function setMidiIntercept(notes: [number, number][], all: boolean) {
+  interceptNotes = new Set(notes.map(([c, p]) => `${c}:${p}`));
+  interceptAll = all;
+}
+
 function onMidi(data: Uint8Array | null) {
   if (!data || data.length < 3) return;
   const status = data[0] & 0xf0;
   const channel = (data[0] & 0x0f) + 1;
   const [, d1, d2] = data;
+  const key = `${channel}:${d1}`;
   if (status === 0x90 && d2 > 0) {
-    midiNote(channel, d1, d2 / 127, true);
-    emit("midi-input", [d1, d2, true, channel]);
+    const taken = interceptAll || interceptNotes.has(key);
+    if (taken) interceptHeld.add(key);
+    else {
+      interceptHeld.delete(key);
+      midiNote(channel, d1, d2 / 127, true);
+    }
+    emit("midi-input", [d1, d2, true, channel, taken]);
   } else if (status === 0x80 || (status === 0x90 && d2 === 0)) {
-    midiNote(channel, d1, 0, false);
-    emit("midi-input", [d1, 0, false, channel]);
+    const taken = interceptHeld.delete(key);
+    if (!taken) midiNote(channel, d1, 0, false);
+    emit("midi-input", [d1, 0, false, channel, taken]);
   } else if (status === 0xb0) {
     emit("midi-cc", [channel, d1, d2]);
   }

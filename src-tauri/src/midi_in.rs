@@ -2,7 +2,36 @@
 //! note and controller messages (with their channel) to a callback.
 
 use midir::{Ignore, MidiInput, MidiInputConnection};
+use std::collections::HashSet;
 use std::sync::Arc;
+
+/// Notes the UI takes for itself instead of playing them (Loop page: pads that
+/// mute tracks, keys that set the transpose). A note-off follows its note-on, so
+/// a key held while the filter changes never sticks.
+#[derive(Default)]
+pub struct Intercept {
+    /// (channel, pitch) pairs.
+    pub notes: HashSet<(u8, u8)>,
+    /// Every note (keys set the transpose).
+    pub all: bool,
+    held: HashSet<(u8, u8)>,
+}
+
+impl Intercept {
+    pub fn note_on(&mut self, channel: u8, pitch: u8) -> bool {
+        let take = self.all || self.notes.contains(&(channel, pitch));
+        if take {
+            self.held.insert((channel, pitch));
+        } else {
+            self.held.remove(&(channel, pitch));
+        }
+        take
+    }
+
+    pub fn note_off(&mut self, channel: u8, pitch: u8) -> bool {
+        self.held.remove(&(channel, pitch))
+    }
+}
 
 /// Channels are 1..16.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -82,5 +111,21 @@ mod tests {
         assert_eq!(parse(&[0x99, 36, 100]), Some(MidiMsg::NoteOn { channel: 10, pitch: 36, velocity: 100 }));
         assert_eq!(parse(&[0x90, 60, 0]), Some(MidiMsg::NoteOff { channel: 1, pitch: 60 }));
         assert_eq!(parse(&[0xB3, 74, 64]), Some(MidiMsg::Control { channel: 4, cc: 74, value: 64 }));
+    }
+
+    #[test]
+    fn intercept_keeps_note_pairs_together() {
+        let mut i = Intercept::default();
+        i.notes.insert((10, 36));
+        assert!(i.note_on(10, 36));
+        assert!(!i.note_on(1, 60));
+        // Filter changes while both keys are held: each note-off follows its note-on.
+        i.notes.clear();
+        i.all = true;
+        assert!(i.note_off(10, 36));
+        assert!(!i.note_off(1, 60));
+        assert!(i.note_on(1, 62));
+        i.all = false;
+        assert!(i.note_off(1, 62));
     }
 }

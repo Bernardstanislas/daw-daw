@@ -119,7 +119,7 @@ pub unsafe extern "C" fn dd_sync(ptr: *const u8, len: usize) -> i32 {
     )
 }
 
-/// 0 play · 1 stop · 2 seek(position) · 3 record · 4 panic (all notes off)
+/// 0 play · 1 stop · 2 seek(position) · 3 record · 4 panic (all notes off) · 5 punch out
 #[unsafe(no_mangle)]
 pub extern "C" fn dd_transport(cmd: u32, position: f64) {
     with(
@@ -129,6 +129,7 @@ pub extern "C" fn dd_transport(cmd: u32, position: f64) {
                 1 => Command::Stop,
                 2 => Command::Seek(position),
                 3 => Command::Record,
+                5 => Command::PunchOut,
                 _ => Command::AllNotesOff,
             };
             st.ctrl.send(c);
