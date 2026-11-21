@@ -26,6 +26,13 @@ export interface AudioStatus {
   midiPorts: string[];
   error: string | null;
   baseDir: string;
+  samples: SamplesStatus;
+}
+
+export interface SamplesStatus {
+  dir: string;
+  total: number;
+  missing: string[];
 }
 
 export interface AudioSettings {
@@ -33,6 +40,7 @@ export interface AudioSettings {
   inputDevice: string | null;
   bufferSize: number | null;
   recordOffsetMs: number;
+  samplesDir?: string | null;
 }
 
 export interface DirEntry {
@@ -112,6 +120,7 @@ const web = (() => {
             midiPorts: st.midiPorts,
             error: st.failure,
             baseDir: "(browser)",
+            samples: st.samples,
           } as T;
         }
         case "set_audio_settings":

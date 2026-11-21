@@ -26,3 +26,9 @@ dist-ssr
 # Built by "pnpm build:wasm"
 public/daw-engine.wasm
 crates/*/target
+
+# Proprietary sample set: never commit it (set its folder in Audio & MIDI settings;
+# for the web build, put it in public/samples)
+crates/daw-core/samples/
+public/samples/
+*.wav

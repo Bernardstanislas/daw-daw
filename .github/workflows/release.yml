@@ -1,0 +1,108 @@
+# Release: push a tag "vX.Y.Z" → builds macOS (universal) + Windows, signs the
+# updater artifacts, and publishes a GitHub release with latest.json for the
+# in-app auto-updater.
+#
+#   git tag v0.2.0 && git push origin v0.2.0
+#
+# Secrets: TAURI_SIGNING_PRIVATE_KEY (key without password; set the _PASSWORD secret if you add one).
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.release.outputs.id }}
+    steps:
+      - id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          id=$(gh api -X POST "repos/$GITHUB_REPOSITORY/releases" \
+            -f tag_name="$TAG" -f name="daw-daw ${TAG#v}" \
+            -F draft=true -F generate_release_notes=true --jq .id)
+          test -n "$id"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: macos-latest
+            args: --target universal-apple-darwin
+            rust_targets: aarch64-apple-darwin,x86_64-apple-darwin
+          - platform: windows-latest
+            args: ""
+            rust_targets: ""
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set version from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          node -e '
+            const fs = require("fs");
+            for (const f of ["src-tauri/tauri.conf.json", "package.json"]) {
+              const j = JSON.parse(fs.readFileSync(f, "utf8"));
+              j.version = process.argv[1];
+              fs.writeFileSync(f, JSON.stringify(j, null, 2) + "\n");
+            }' "$VERSION"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_targets }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          args: ${{ matrix.args }}
+
+  publish-release:
+    needs: [create-release, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check latest.json covers every platform
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --pattern latest.json --dir /tmp/rel
+          jq -e '.platforms | has("darwin-aarch64") and has("darwin-x86_64") and has("windows-x86_64")' /tmp/rel/latest.json
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/${{ needs.create-release.outputs.release_id }}" -F draft=false -F make_latest=true

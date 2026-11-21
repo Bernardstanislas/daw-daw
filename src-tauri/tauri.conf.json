@@ -26,7 +26,11 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": [
+      "app",
+      "dmg",
+      "nsis"
+    ],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -35,6 +39,21 @@
       "icons/icon.ico"
     ],
     "category": "Music",
-    "shortDescription": "A small DAW"
+    "shortDescription": "A small DAW",
+    "createUpdaterArtifacts": true,
+    "macOS": {
+      "signingIdentity": "-"
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDY2MzExQkI5M0Q3NjNGODUKUldTRlAzWTl1UnN4Wm1kM2E4eG1UelYwNm9WVXFzLzRXNzJZSXFXNG8zSXNBSE9xcGdrSlN6MGQK",
+      "endpoints": [
+        "https://github.com/Bernardstanislas/daw-daw/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

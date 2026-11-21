@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { setUi, useStore } from "./lib/store";
+import { setUi, toast, useStore } from "./lib/store";
+import { backend, isTauri } from "./lib/backend";
 import { TopBar } from "./components/TopBar";
 import { Browser } from "./components/Browser";
 import { Arrange } from "./components/arrange/Arrange";
@@ -9,6 +10,7 @@ import { Sound } from "./components/Sound";
 import { Dialogs } from "./components/Dialogs";
 import { ContextMenuHost } from "./components/Menu";
 import { PromptHost } from "./components/Prompt";
+import { Updater } from "./components/Updater";
 import { StatusBar } from "./components/StatusBar";
 import { clamp, capturePointer } from "./lib/music";
 
@@ -66,6 +68,16 @@ export default function App() {
   const browser = useStore((s) => s.ui.browser);
   const browserWidth = useStore((s) => s.ui.browserWidth);
   useEffect(() => {
+    // The sampler's sample set lives outside the app (proprietary audio): say when it is missing.
+    if (!isTauri) return;
+    backend
+      .getAudioStatus()
+      .then((st) => {
+        if (st.samples.missing.length) toast(`Sampler: ${st.samples.missing.length} samples missing in ${st.samples.dir} — set the folder in Audio & MIDI settings`, "error", 9000);
+      })
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
     const prevent = (e: MouseEvent) => {
       // Native context menu only in text fields.
       const t = e.target as HTMLElement;
@@ -115,6 +127,7 @@ export default function App() {
       <Dialogs />
       <ContextMenuHost />
       <PromptHost />
+      <Updater />
     </div>
   );
 }

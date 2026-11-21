@@ -54,6 +54,14 @@ class DawEngineProcessor extends AudioWorkletProcessor {
       case "target":
         this.withBytes(m.track, (p, l) => x.dd_set_live_target(p, l));
         break;
+      case "samples": {
+        // [{ path: UTF-8 bytes, data: WAV bytes }]
+        for (const f of m.files) {
+          this.withBytes(f.path, (pp, pl) => this.withBytes(f.data, (dp, dl) => x.dd_add_sample(pp, pl, dp, dl)));
+        }
+        x.dd_load_samples();
+        break;
+      }
       case "asset": {
         // planar Float32Array, channels × frames
         const data = m.data;

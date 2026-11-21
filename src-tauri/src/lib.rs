@@ -31,6 +31,17 @@ pub struct AudioSettings {
     pub buffer_size: Option<u32>,
     /// Shift applied to recorded audio to compensate round-trip latency (ms).
     pub record_offset_ms: f64,
+    /// Folder holding the sampler's sample set (default: `<base>/Samples`).
+    pub samples_dir: Option<String>,
+}
+
+/// Where the sampler's sample set was loaded from, and what is missing.
+#[derive(Debug, Clone, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SamplesStatus {
+    pub dir: String,
+    pub total: usize,
+    pub missing: Vec<String>,
 }
 
 pub struct AppState {
@@ -44,6 +55,7 @@ pub struct AppState {
     input: Mutex<Option<(u32, u16)>>,
     midi: Mutex<Option<MidiInputs>>,
     audio_error: Mutex<Option<String>>,
+    samples: Mutex<SamplesStatus>,
 }
 
 type CmdResult<T> = Result<T, String>;
@@ -57,6 +69,23 @@ fn base_dir() -> PathBuf {
         .or_else(dirs::home_dir)
         .unwrap_or_else(std::env::temp_dir)
         .join("daw-daw")
+}
+
+fn samples_dir(settings: &AudioSettings) -> PathBuf {
+    match settings.samples_dir.as_deref().map(str::trim) {
+        Some(d) if !d.is_empty() => PathBuf::from(d),
+        _ => base_dir().join("Samples"),
+    }
+}
+
+/// (Re)loads the sample set from the configured folder; missing files stay silent.
+fn load_samples(settings: &AudioSettings) -> SamplesStatus {
+    let dir = samples_dir(settings);
+    let missing = dsp::sampler::load_samples(|f| std::fs::read(dir.join(f)).ok());
+    if !missing.is_empty() {
+        eprintln!("[samples] {} of {} files missing in {}", missing.len(), dsp::sampler::sample_files().count(), dir.display());
+    }
+    SamplesStatus { dir: dir.to_string_lossy().into_owned(), total: dsp::sampler::sample_files().count(), missing }
 }
 
 fn settings_path(app: &AppHandle) -> Option<PathBuf> {
@@ -339,6 +368,7 @@ struct AudioStatus {
     midi_ports: Vec<String>,
     error: Option<String>,
     base_dir: String,
+    samples: SamplesStatus,
 }
 
 #[tauri::command]
@@ -351,13 +381,20 @@ fn get_audio_status(state: State<'_, AppState>) -> AudioStatus {
         midi_ports: state.midi.lock().as_ref().map(|m| m.port_names.clone()).unwrap_or_default(),
         error: state.audio_error.lock().clone(),
         base_dir: base_dir().to_string_lossy().into_owned(),
+        samples: state.samples.lock().clone(),
     }
 }
 
 #[tauri::command]
 fn set_audio_settings(app: AppHandle, state: State<'_, AppState>, settings: AudioSettings) -> CmdResult<OutputInfo> {
-    let input_changed = state.settings.lock().input_device != settings.input_device;
+    let (input_changed, samples_changed) = {
+        let old = state.settings.lock();
+        (old.input_device != settings.input_device, samples_dir(&old) != samples_dir(&settings))
+    };
     *state.settings.lock() = settings.clone();
+    if samples_changed {
+        *state.samples.lock() = load_samples(&settings);
+    }
     save_settings(&app, &settings);
     if input_changed && state.input.lock().take().is_some() {
         state.host.close_input();
@@ -412,27 +449,12 @@ fn list_dir(path: String) -> CmdResult<Vec<DirEntry>> {
     Ok(v)
 }
 
-/// Writes the embedded sample set to `<base>/Library` (once) so the files can be
-/// browsed, previewed and dragged as audio clips. Returns the folder.
+/// The samples folder, for the browser (created if needed).
 #[tauri::command]
-fn library_dir() -> CmdResult<String> {
-    use dsp::sample_data::{DRUMS, INSTRUMENTS};
-    let root = base_dir().join("Library");
-    let write = |dir: &std::path::Path, name: &str, data: &[u8]| -> std::io::Result<()> {
-        std::fs::create_dir_all(dir)?;
-        let path = dir.join(format!("{name}.wav"));
-        if !path.exists() {
-            std::fs::write(path, data)?;
-        }
-        Ok(())
-    };
-    for s in INSTRUMENTS {
-        write(&root.join("Instruments"), s.name, s.wav).map_err(err)?;
-    }
-    for d in DRUMS {
-        write(&root.join("Drums"), d.name, d.wav).map_err(err)?;
-    }
-    Ok(root.to_string_lossy().into_owned())
+fn library_dir(state: State<'_, AppState>) -> CmdResult<String> {
+    let dir = PathBuf::from(&state.samples.lock().dir);
+    std::fs::create_dir_all(&dir).map_err(err)?;
+    Ok(dir.to_string_lossy().into_owned())
 }
 
 #[tauri::command]
@@ -543,6 +565,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .setup(|app| {
             // Third-party plugins become available to the engine; their creation
             // and destruction are routed to the main thread.
@@ -555,6 +579,7 @@ pub fn run() {
             }
             let handle = app.handle().clone();
             let settings = load_settings(&handle);
+            let samples = load_samples(&settings);
             let rate = audio_io::probe_output_rate(settings.output_device.as_deref()).unwrap_or(48_000);
             let (ctrl, engine) = Controller::new(rate as f32);
             let shared = ctrl.shared.clone();
@@ -614,6 +639,7 @@ pub fn run() {
                 input: Mutex::new(None),
                 midi: Mutex::new(Some(midi)),
                 audio_error: Mutex::new(None),
+                samples: Mutex::new(samples),
             });
             // Ctrl+Tab: main window <-> plugin editor windows.
             #[cfg(target_os = "macos")]
