@@ -29,6 +29,8 @@ struct State {
 thread_local! {
     static STATE: RefCell<Option<State>> = const { RefCell::new(None) };
     static RESULT_LEN: RefCell<usize> = const { RefCell::new(0) };
+    /// Sample files handed over by the host, applied by `dd_load_samples`.
+    static PENDING_SAMPLES: RefCell<std::collections::HashMap<String, Vec<u8>>> = RefCell::new(Default::default());
 }
 
 fn with<R>(f: impl FnOnce(&mut State) -> R, default: R) -> R {
@@ -281,6 +283,37 @@ pub extern "C" fn dd_catalog() -> *const u8 {
     with(|st| set_result(st, json), std::ptr::null())
 }
 
+// ------------------------------------------------------------------ samples
+
+/// JSON array of the sample files the sampler needs (paths relative to the samples folder).
+#[unsafe(no_mangle)]
+pub extern "C" fn dd_sample_files() -> *const u8 {
+    let files: Vec<&str> = daw_core::dsp::sampler::sample_files().collect();
+    let json = serde_json::to_vec(&files).unwrap_or_default();
+    with(|st| set_result(st, json), std::ptr::null())
+}
+
+/// Hands over one sample file (raw WAV bytes); applied by `dd_load_samples`.
+///
+/// # Safety
+/// Both ranges must be readable.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn dd_add_sample(path_ptr: *const u8, path_len: usize, data_ptr: *const u8, data_len: usize) {
+    let path = unsafe { text(path_ptr, path_len) }.to_string();
+    let data = unsafe { bytes(data_ptr, data_len) }.to_vec();
+    PENDING_SAMPLES.with(|m| m.borrow_mut().insert(path, data));
+}
+
+/// Loads the handed-over samples (missing ones stay silent). Returns a JSON array
+/// of the missing files.
+#[unsafe(no_mangle)]
+pub extern "C" fn dd_load_samples() -> *const u8 {
+    let files = PENDING_SAMPLES.with(|m| std::mem::take(&mut *m.borrow_mut()));
+    let missing = daw_core::dsp::sampler::load_samples(|f| files.get(f).cloned());
+    let json = serde_json::to_vec(&missing).unwrap_or_default();
+    with(|st| set_result(st, json), std::ptr::null())
+}
+
 // ------------------------------------------------------------------ export
 
 /// Renders the project offline (uses the assets registered in this instance).
@@ -315,7 +348,7 @@ mod tests {
     fn end_to_end_through_the_c_api() {
         dd_init(48_000.0);
         let project = r#"{"bpm":120,"timeSigNum":4,"timeSigDen":4,"tracks":[{"id":"t1","kind":"instrument",
-            "instrument":{"id":"i","type":"sampler","enabled":true,"params":{}},
+            "instrument":{"id":"i","type":"pulse","enabled":true,"params":{}},
             "clips":[{"id":"c","kind":"midi","start":0,"length":4,"notes":[{"pitch":60,"start":0,"length":1,"velocity":100}]}]}]}"#;
         assert_eq!(call_json(project, dd_sync), 0);
         dd_transport(0, 0.0);
@@ -325,7 +358,7 @@ mod tests {
             let out = unsafe { std::slice::from_raw_parts(p, 256) };
             peak = out.iter().fold(peak, |m, v| m.max(v.abs()));
         }
-        assert!(peak > 0.01, "sampler note audible: {peak}");
+        assert!(peak > 0.01, "synth note audible: {peak}");
         let st = unsafe { std::slice::from_raw_parts(dd_status(), 8) };
         assert!(st[0] > 0.5 && st[1] == 1.0, "position advanced, playing");
         let p = dd_poll();

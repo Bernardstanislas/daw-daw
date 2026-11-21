@@ -1,24 +1,29 @@
-//! Sample-based instruments built on the embedded sample set (`sample_data.rs`):
+//! Sample-based instruments built on the sample set described in `sample_data.rs`:
 //! - `Sampler`: chromatic multi-sound instrument (one looped sample per sound).
 //! - `SampleKit`: one-shot drum kit (TightKit), GM mapped.
+//!
+//! The audio itself is not part of the build (it is proprietary): the host loads it
+//! at runtime from a samples folder with `load_samples`. Missing files stay silent.
 
-use std::sync::{Arc, OnceLock};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::{Arc, OnceLock, RwLock};
 
 use super::sample_data::{DRUM_NOTE_NAMES, DRUMS, INSTRUMENT_NAMES, INSTRUMENT_PRESETS, INSTRUMENTS};
 use super::util::{Adsr, AdsrStage};
 use super::*;
 
-/// Native rate of every embedded sample.
+/// Native rate of every sample in the set.
 const SAMPLE_RATE: f64 = 48_000.0;
 
-/// Decoded sample data, shared by every instance (decoded once, off the audio thread).
+/// Decoded sample data, shared by every instance (decoded off the audio thread).
+/// An empty buffer means the file was missing.
 struct Bank {
     instruments: Vec<Arc<[f32]>>,
     drums: Vec<Arc<[f32]>>,
 }
 
-fn decode(wav: &[u8]) -> Arc<[f32]> {
-    let reader = hound::WavReader::new(std::io::Cursor::new(wav)).expect("embedded WAV");
+fn decode(wav: &[u8]) -> Option<Arc<[f32]>> {
+    let reader = hound::WavReader::new(std::io::Cursor::new(wav)).ok()?;
     let spec = reader.spec();
     let ch = spec.channels.max(1) as usize;
     let scale = 1.0 / (1i64 << (spec.bits_per_sample - 1)) as f32;
@@ -27,15 +32,62 @@ fn decode(wav: &[u8]) -> Arc<[f32]> {
         hound::SampleFormat::Float => reader.into_samples::<f32>().map(|s| s.unwrap_or(0.0)).collect(),
     };
     // Mono mix-down (the set is mono already).
-    raw.chunks(ch).map(|f| f.iter().sum::<f32>() / ch as f32).collect::<Vec<_>>().into()
+    let mono: Vec<f32> = raw.chunks(ch).map(|f| f.iter().sum::<f32>() / ch as f32).collect();
+    (mono.len() > 1).then(|| mono.into())
 }
 
-fn bank() -> &'static Bank {
-    static BANK: OnceLock<Bank> = OnceLock::new();
-    BANK.get_or_init(|| Bank {
-        instruments: INSTRUMENTS.iter().map(|s| decode(s.wav)).collect(),
-        drums: DRUMS.iter().map(|s| decode(s.wav)).collect(),
+fn bank_slot() -> &'static RwLock<Arc<Bank>> {
+    static SLOT: OnceLock<RwLock<Arc<Bank>>> = OnceLock::new();
+    SLOT.get_or_init(|| {
+        let empty: Arc<[f32]> = Arc::from(Vec::new());
+        RwLock::new(Arc::new(Bank {
+            instruments: INSTRUMENTS.iter().map(|_| empty.clone()).collect(),
+            drums: DRUMS.iter().map(|_| empty.clone()).collect(),
+        }))
     })
+}
+
+/// Bumped on every `load_samples`: live instruments pick the new bank up.
+static BANK_GEN: AtomicU64 = AtomicU64::new(0);
+
+fn bank() -> (Arc<Bank>, u64) {
+    let g = BANK_GEN.load(Ordering::Acquire);
+    (bank_slot().read().map(|b| b.clone()).unwrap_or_else(|e| e.into_inner().clone()), g)
+}
+
+/// Audio-thread side: swaps in a newer bank if one was loaded (never blocks).
+fn refresh(bank: &mut Arc<Bank>, seen: &mut u64) {
+    let g = BANK_GEN.load(Ordering::Acquire);
+    if g != *seen {
+        if let Ok(b) = bank_slot().try_read() {
+            *bank = b.clone();
+            *seen = g;
+        }
+    }
+}
+
+/// Every file of the sample set, relative to the samples folder.
+pub fn sample_files() -> impl Iterator<Item = &'static str> {
+    INSTRUMENTS.iter().map(|s| s.file).chain(DRUMS.iter().map(|d| d.file))
+}
+
+/// Loads the sample set; `read(relative_path)` returns a file's bytes. Returns the
+/// files that are missing or unreadable (their sounds stay silent).
+pub fn load_samples(read: impl Fn(&str) -> Option<Vec<u8>>) -> Vec<String> {
+    let mut missing = Vec::new();
+    let mut load = |file: &str| {
+        read(file).and_then(|b| decode(&b)).unwrap_or_else(|| {
+            missing.push(file.to_string());
+            Arc::from(Vec::new())
+        })
+    };
+    let bank = Bank {
+        instruments: INSTRUMENTS.iter().map(|s| load(s.file)).collect(),
+        drums: DRUMS.iter().map(|d| load(d.file)).collect(),
+    };
+    *bank_slot().write().unwrap_or_else(|e| e.into_inner()) = Arc::new(bank);
+    BANK_GEN.fetch_add(1, Ordering::AcqRel);
+    missing
 }
 
 #[inline]
@@ -103,7 +155,8 @@ struct Voice {
 
 pub struct Sampler {
     sr: f32,
-    bank: &'static Bank,
+    bank: Arc<Bank>,
+    bank_gen: u64,
     voices: [Voice; VOICES],
     sound: usize,
     adsr: [f32; 4],
@@ -121,9 +174,11 @@ use super::util::Smoother;
 impl Sampler {
     pub fn new(sample_rate: f32) -> Self {
         let sr = sample_rate.max(8000.0);
+        let (bank, bank_gen) = bank();
         let mut s = Self {
             sr,
-            bank: bank(),
+            bank,
+            bank_gen,
             voices: [Voice { active: false, note: 0, sound: 0, pos: 0.0, rate: 1.0, gain: 0.0, env: Adsr::new(sr), age: 0 }; VOICES],
             sound: DEFAULT_SOUND,
             adsr: [0.005, 1.2, 0.55, 0.7],
@@ -163,6 +218,9 @@ impl Instrument for Sampler {
                     .unwrap_or(0)
             });
         let sound = self.sound.min(INSTRUMENTS.len() - 1);
+        if self.bank.instruments[sound].is_empty() {
+            return; // sample not loaded
+        }
         let rate = self.rate_for(pitch, sound);
         let vel = velocity.clamp(0.0, 1.0);
         let gain = (1.0 - self.vel_sens) + self.vel_sens * vel * vel;
@@ -215,6 +273,7 @@ impl Instrument for Sampler {
     }
 
     fn process(&mut self, _ctx: &ProcessCtx, l: &mut [f32], r: &mut [f32]) {
+        refresh(&mut self.bank, &mut self.bank_gen);
         let n = l.len();
         if !self.voices.iter().any(|v| v.active) && self.lp_state.abs() < 1e-7 {
             // Keep smoothers moving so a later note starts at the right level.
@@ -251,7 +310,7 @@ impl Instrument for Sampler {
                     if v.pos >= le as f64 {
                         v.pos -= span as f64;
                     }
-                } else if v.pos >= (len - 1) as f64 {
+                } else if v.pos + 1.0 >= len as f64 {
                     v.active = false;
                     v.env.reset();
                     continue;
@@ -332,7 +391,8 @@ struct Hit {
 
 pub struct SampleKit {
     sr: f32,
-    bank: &'static Bank,
+    bank: Arc<Bank>,
+    bank_gen: u64,
     hits: [Hit; KIT_VOICES],
     rate: f64,
     decay: f32,
@@ -345,9 +405,11 @@ pub struct SampleKit {
 impl SampleKit {
     pub fn new(sample_rate: f32) -> Self {
         let sr = sample_rate.max(8000.0);
+        let (bank, bank_gen) = bank();
         let mut k = Self {
             sr,
-            bank: bank(),
+            bank,
+            bank_gen,
             hits: [Hit { active: false, drum: 0, pos: 0.0, gain: 0.0, fade_coef: 1.0, fade: 1.0, choked: false }; KIT_VOICES],
             rate: 1.0,
             decay: 1.0,
@@ -366,6 +428,9 @@ impl Instrument for SampleKit {
     fn note_on(&mut self, pitch: u8, velocity: f32) {
         let note = kit_note(pitch);
         let Some(drum) = DRUMS.iter().position(|d| d.note == note) else { return };
+        if self.bank.drums[drum].is_empty() {
+            return; // sample not loaded
+        }
         if self.choke && (note == 42) {
             if let Some(open) = DRUMS.iter().position(|d| d.note == 46) {
                 for h in self.hits.iter_mut().filter(|h| h.active && h.drum == open) {
@@ -413,6 +478,7 @@ impl Instrument for SampleKit {
     }
 
     fn process(&mut self, _ctx: &ProcessCtx, l: &mut [f32], r: &mut [f32]) {
+        refresh(&mut self.bank, &mut self.bank_gen);
         let rate = self.rate;
         let drive = 1.0 + self.drive * 6.0;
         let comp = 1.0 / (1.0 + self.drive * 1.5);
@@ -423,7 +489,7 @@ impl Instrument for SampleKit {
                     continue;
                 }
                 let data = &self.bank.drums[h.drum];
-                if h.pos >= (data.len() - 1) as f64 || h.fade < 1e-4 {
+                if h.pos + 1.0 >= data.len() as f64 || h.fade < 1e-4 {
                     h.active = false;
                     continue;
                 }
@@ -458,6 +524,35 @@ mod tests {
         l
     }
 
+    /// Loads the sample set once from $DAW_SAMPLES_DIR or ~/Music/daw-daw/Samples.
+    /// Tests that need real audio return early when it is not there (e.g. CI).
+    fn samples_loaded() -> bool {
+        static OK: OnceLock<bool> = OnceLock::new();
+        *OK.get_or_init(|| {
+            let dir = std::env::var_os("DAW_SAMPLES_DIR")
+                .map(std::path::PathBuf::from)
+                .or_else(|| std::env::var_os("HOME").map(|h| std::path::PathBuf::from(h).join("Music/daw-daw/Samples")));
+            let missing = load_samples(|f| dir.as_ref().and_then(|d| std::fs::read(d.join(f)).ok()));
+            if !missing.is_empty() {
+                eprintln!("sample tests skipped: {} sample files missing", missing.len());
+            }
+            missing.is_empty()
+        })
+    }
+
+    #[test]
+    fn missing_samples_are_silent() {
+        if samples_loaded() {
+            return;
+        }
+        let mut smp = Sampler::new(48_000.0);
+        smp.note_on(60, 1.0);
+        assert!(peak(&render(&mut smp, 48_000.0, 4_800)) == 0.0);
+        let mut kit = SampleKit::new(48_000.0);
+        kit.note_on(36, 1.0);
+        assert!(peak(&render(&mut kit, 48_000.0, 4_800)) == 0.0);
+    }
+
     fn peak(x: &[f32]) -> f32 {
         x.iter().fold(0.0, |m, v| m.max(v.abs()))
     }
@@ -483,6 +578,9 @@ mod tests {
 
     #[test]
     fn every_sound_plays_and_is_finite() {
+        if !samples_loaded() {
+            return;
+        }
         for (i, s) in INSTRUMENTS.iter().enumerate() {
             let mut smp = Sampler::new(48_000.0);
             let mut p = SPEC.default_values();
@@ -515,6 +613,9 @@ mod tests {
 
     #[test]
     fn pitch_follows_the_keyboard() {
+        if !samples_loaded() {
+            return;
+        }
         // Tine EP is a clean tone: A4 (440 Hz) should come out near 440 Hz.
         let tine = INSTRUMENTS.iter().position(|s| s.id == "tine-ep").unwrap();
         let mut smp = Sampler::new(48_000.0);
@@ -529,6 +630,9 @@ mod tests {
 
     #[test]
     fn held_note_sustains_through_the_loop_and_releases() {
+        if !samples_loaded() {
+            return;
+        }
         let strings = INSTRUMENTS.iter().position(|s| s.id == "strings").unwrap();
         let mut smp = Sampler::new(48_000.0);
         let mut p = SPEC.default_values();
@@ -549,6 +653,9 @@ mod tests {
 
     #[test]
     fn kit_maps_gm_notes_and_fallbacks() {
+        if !samples_loaded() {
+            return;
+        }
         let mut kit = SampleKit::new(48_000.0);
         for note in [36u8, 35, 38, 40, 42, 44, 46, 49, 54, 39, 41, 45, 48, 70] {
             kit.note_on(note, 1.0);
@@ -563,6 +670,9 @@ mod tests {
 
     #[test]
     fn closed_hat_chokes_open_hat() {
+        if !samples_loaded() {
+            return;
+        }
         let mut kit = SampleKit::new(48_000.0);
         kit.note_on(46, 1.0);
         render(&mut kit, 48_000.0, 4_800);

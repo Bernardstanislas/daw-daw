@@ -3,7 +3,8 @@
 Un petit DAW de bureau (Tauri v2 + Rust + React), inspiré de l'esprit de Cakewalk Next : une
 seule fenêtre, une arrangement claire avec des **sections** (Intro / Couplet / Refrain…) qu'on
 réordonne en les glissant, un piano roll, un mixer, et des instruments/effets intégrés.
-Tout le code, les sons (100 % synthétisés) et les presets sont originaux.
+Le code, les synthés et les presets sont originaux. Les samples du Sampler et du Sample Kit
+sont propriétaires : ils ne sont pas dans le repo (voir « Samples » plus bas).
 
 ## Lancer
 
@@ -15,8 +16,9 @@ pnpm tauri build      # .app / .dmg dans src-tauri/target/release/bundle
 ```
 
 Version navigateur (`pnpm dev:web`, puis http://localhost:1420 dans Chrome ou Edge) :
-le moteur tourne dans un AudioWorklet, avec les mêmes instruments, effets et samples que l'app
-de bureau. Les claviers MIDI branchés sont détectés via Web MIDI (Chrome demande l'autorisation).
+le moteur tourne dans un AudioWorklet, avec les mêmes instruments et effets que l'app
+de bureau. Les samples sont chargés depuis `public/samples/` (ignoré par git) ou depuis l'URL
+`VITE_SAMPLES_URL`. Les claviers MIDI branchés sont détectés via Web MIDI (Chrome demande l'autorisation).
 Le musical typing marche aussi. On importe de l'audio en le déposant sur l'arrangement ou avec
 « Import audio… » dans l'onglet Files, et l'export WAV se télécharge. Le son démarre au premier
 clic ou à la première touche, c'est une règle des navigateurs. Pas disponible dans le navigateur :
@@ -27,6 +29,7 @@ Tests :
 
 ```bash
 cd crates/daw-core && cargo test     # moteur, DSP (instruments/effets), sauvegarde
+                                      # (tests du sampler sautés sans samples ; DAW_SAMPLES_DIR=… pour un autre dossier)
 cd crates/daw-wasm && cargo test     # API WebAssembly
 npx tsc --noEmit                      # typage du frontend
 ```
@@ -68,9 +71,11 @@ projet.
     2 enveloppes, LFO synchronisable, glide/mono.
   - *Drum Kit* : batterie synthétisée, 4 caractères.
   - *Keys* : piano électrique FM, orgue à tirettes, piano doux.
-- **Samples** : les WAV du Sampler et du kit sont embarqués dans l'app (`crates/daw-core/samples/`,
-  provenance dans `NOTICE.md`). Le bouton « Library » de l'onglet Files les dépose dans
-  `~/Music/daw-daw/Library` pour les pré-écouter et les glisser comme clips audio.
+- **Samples** : les WAV du Sampler et du kit ne sont ni dans le repo ni dans l'app : ils sont lus au
+  démarrage depuis le dossier de samples, par défaut `~/Music/daw-daw/Samples` (réglable dans
+  Audio & MIDI settings → « Samples folder »). Il doit contenir `instruments/<id>.wav` et
+  `drums/<id>.wav` (noms dans `crates/daw-core/src/dsp/sample_data.rs`). Un son absent reste muet,
+  et l'app le signale au démarrage. Le bouton « Library » de l'onglet Files ouvre ce dossier.
 - **Plugins tiers (app de bureau, macOS)** : tous les Audio Units installés (Vital, Surge XT,
   Zebra, Serum…) apparaissent dans le groupe « Plugins » des onglets Instruments et Effects.
   Un clic sur un instrument le pré-écoute au clavier MIDI, un glisser ou un double-clic l'ajoute.
@@ -125,9 +130,8 @@ src-tauri/src/               App de bureau
   assets.rs                  Décodage (symphonia), WAV (hound), forme d'onde
   project_io.rs              Sauvegarde/chargement, rendu hors-ligne (export)
   dsp/                       Instruments et effets + registre
-  dsp/sampler.rs             Sampler et Sample Kit (samples embarqués)
-  dsp/sample_data.rs         Table des samples (générée par tools/import_hichord.py)
-samples/ (dans daw-core)     WAV + manifest.json + NOTICE.md
+  dsp/sampler.rs             Sampler et Sample Kit (samples chargés au runtime)
+  dsp/sample_data.rs         Métadonnées des samples (générée par tools/import_hichord.py)
 tools/                       import_hichord.py, measure_pitch.py
 ```
 

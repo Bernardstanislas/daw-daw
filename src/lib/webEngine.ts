@@ -9,6 +9,8 @@ type Listener = (payload: unknown) => void;
 const WASM_URL = "/daw-engine.wasm";
 const WORKLET_URL = "/engine-worklet.js";
 const PEAKS_PER_SECOND = 200;
+/** Sampler sample set (proprietary, not in git): put it in public/samples or point VITE_SAMPLES_URL elsewhere. */
+const SAMPLES_URL = String(import.meta.env.VITE_SAMPLES_URL ?? "/samples").replace(/\/$/, "");
 
 const enc = new TextEncoder();
 const dec = new TextDecoder();
@@ -23,6 +25,9 @@ const listeners = new Map<string, Set<Listener>>();
 /** Decoded PCM kept for offline export and session reloads. */
 const pcm = new Map<string, { sampleRate: number; channels: Float32Array[]; info: AssetInfo }>();
 let midiPorts: string[] = [];
+/** Fetched sample files, re-used for the offline export instance. */
+let samples: { path: string; data: Uint8Array }[] = [];
+let samplesStatus = { dir: SAMPLES_URL, total: 0, missing: [] as string[] };
 let midiAccess: MIDIAccess | null = null;
 
 export function on(event: string, cb: Listener): () => void {
@@ -47,7 +52,62 @@ export function webEngineState() {
     sampleRate: ctx?.sampleRate ?? 0,
     running: ctx?.state === "running",
     midiPorts,
+    samples: samplesStatus,
   };
+}
+
+interface SampleExports {
+  memory: WebAssembly.Memory;
+  dd_alloc(n: number): number;
+  dd_free(p: number, n: number): void;
+  dd_result_len(): number;
+  dd_add_sample(pp: number, pl: number, dp: number, dl: number): void;
+  dd_load_samples(): number;
+}
+
+function copyIn(x: SampleExports, bytes: Uint8Array): number {
+  const p = x.dd_alloc(bytes.length);
+  new Uint8Array(x.memory.buffer, p, bytes.length).set(bytes);
+  return p;
+}
+
+/** Loads the fetched samples into an engine instance; returns the missing files. */
+function loadSamplesInto(x: SampleExports): string[] {
+  for (const s of samples) {
+    const path = enc.encode(s.path);
+    const pp = copyIn(x, path);
+    const dp = copyIn(x, s.data);
+    x.dd_add_sample(pp, path.length, dp, s.data.length);
+    x.dd_free(pp, path.length);
+    x.dd_free(dp, s.data.length);
+  }
+  const r = x.dd_load_samples();
+  return JSON.parse(dec.decode(new Uint8Array(x.memory.buffer, r, x.dd_result_len()).slice()));
+}
+
+/** Fetches the sample set (missing files stay silent) and hands it to the worklet. */
+async function fetchSamples(module: WebAssembly.Module) {
+  const x = (await WebAssembly.instantiate(module, {})).exports as unknown as SampleExports & {
+    dd_init(sr: number): void;
+    dd_sample_files(): number;
+  };
+  x.dd_init(48_000);
+  const p = x.dd_sample_files();
+  const files: string[] = JSON.parse(dec.decode(new Uint8Array(x.memory.buffer, p, x.dd_result_len()).slice()));
+  const got = await Promise.all(
+    files.map(async (path) => {
+      try {
+        const r = await fetch(`${SAMPLES_URL}/${path}`);
+        return r.ok ? { path, data: new Uint8Array(await r.arrayBuffer()) } : null;
+      } catch {
+        return null;
+      }
+    }),
+  );
+  samples = got.filter((s) => s !== null);
+  // Decoding here also weeds out dev-server HTML fallbacks served for missing files.
+  samplesStatus = { dir: SAMPLES_URL, total: files.length, missing: loadSamplesInto(x) };
+  post({ type: "samples", files: samples.map((s) => ({ path: enc.encode(s.path), data: s.data })) });
 }
 
 /** Starts Web Audio + the wasm engine. Safe to call several times. */
@@ -72,6 +132,7 @@ export async function startWebEngine(): Promise<void> {
     node.port.onmessage = (e) => onWorkletMessage(e.data);
     ready = true;
     for (const m of queue.splice(0)) node.port.postMessage(m);
+    fetchSamples(wasmModule).catch((e) => console.warn("[web engine] samples:", e));
     // Browsers only start audio after a user gesture.
     const resume = () => {
       if (ctx && ctx.state !== "running") ctx.resume();
@@ -288,6 +349,7 @@ export async function exportWav(
     dd_result_len(): number;
   };
   x.dd_init(opts.sampleRate);
+  loadSamplesInto(x as unknown as SampleExports);
   const withBytes = <T,>(bytes: Uint8Array, fn: (p: number, l: number) => T): T => {
     const p = x.dd_alloc(bytes.length);
     new Uint8Array(x.memory.buffer, p, bytes.length).set(bytes);

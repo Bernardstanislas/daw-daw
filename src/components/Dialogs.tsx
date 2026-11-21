@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useStore, toast } from "../lib/store";
-import { backend, isTauri, listen, type AudioStatus } from "../lib/backend";
+import { backend, isTauri, listen, openDialog, type AudioStatus } from "../lib/backend";
 import { exportMixdown, newProject } from "../lib/fileOps";
 import { TEMPLATES } from "../lib/templates";
 import { IconClose } from "./icons";
@@ -113,6 +113,36 @@ function SettingsDialog() {
           <button className="btn small" onClick={() => backend.rescanMidi().then(refresh)}>
             Rescan
           </button>
+        </div>
+        <label>
+          <span>Samples folder</span>
+          <span className="inline path-row">
+            <span className="path" title={st.samples.dir}>
+              {st.samples.dir}
+            </span>{" "}
+            {isTauri && (
+              <button
+                className="btn small"
+                disabled={busy}
+                onClick={async () => {
+                  const d = await openDialog({ directory: true, title: "Samples folder", defaultPath: st.samples.dir });
+                  if (d?.[0]) apply({ samplesDir: d[0] });
+                }}
+              >
+                Choose…
+              </button>
+            )}
+            {isTauri && s.samplesDir && (
+              <button className="btn small" disabled={busy} onClick={() => apply({ samplesDir: null })}>
+                Default
+              </button>
+            )}
+          </span>
+        </label>
+        <div className={st.samples.missing.length ? "form-error" : "form-info small"}>
+          {st.samples.missing.length === 0
+            ? `Sampler and Sample Kit: ${st.samples.total} samples loaded.`
+            : `${st.samples.missing.length} of ${st.samples.total} samples missing: the folder must contain instruments/*.wav and drums/*.wav (e.g. ${st.samples.missing[0]}). Missing sounds stay silent.`}
         </div>
         <div className="form-info small">Projects, recordings and exports are stored in {st.baseDir}</div>
         {!isTauri && <div className="form-error">Running in a browser: audio is disabled (UI preview only).</div>}

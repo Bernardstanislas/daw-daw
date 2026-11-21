@@ -4473,3 +4473,19 @@ input.text-input.title.tape:focus {
   from { transform: translateX(-100%); }
   to { transform: translateX(340%); }
 }
+
+.form .path-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.form .path-row .path {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  text-align: left;
+}
