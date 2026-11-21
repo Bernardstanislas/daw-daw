@@ -162,6 +162,13 @@ pub unsafe extern "C" fn dd_live_note(pitch: u32, velocity: f32, on: u32, track_
     )
 }
 
+/// Note from a MIDI controller on `channel` (1..16): routed to the track listening
+/// to that channel, else to the live target.
+#[unsafe(no_mangle)]
+pub extern "C" fn dd_midi_note(channel: u32, pitch: u32, velocity: f32, on: u32) {
+    with(|st| st.ctrl.midi_note(channel.min(16) as u8, pitch.min(127) as u8, velocity, on != 0), ())
+}
+
 /// Sets the track that receives MIDI-keyboard / typing notes (empty = none).
 ///
 /// # Safety

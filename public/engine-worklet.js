@@ -51,6 +51,9 @@ class DawEngineProcessor extends AudioWorkletProcessor {
       case "note":
         this.withBytes(m.track || new Uint8Array(0), (p, l) => x.dd_live_note(m.pitch, m.velocity, m.on ? 1 : 0, p, l));
         break;
+      case "midi":
+        x.dd_midi_note(m.channel, m.pitch, m.velocity, m.on ? 1 : 0);
+        break;
       case "target":
         this.withBytes(m.track, (p, l) => x.dd_set_live_target(p, l));
         break;

@@ -138,6 +138,7 @@ export const TrackHeader = memo(function TrackHeader({ track, index, selected }:
               onBegin={beginGesture}
               onChange={(v) => gesture((p) => void (draftTrack(p, track.id)!.volume = Math.round(v * 10) / 10))}
               onEnd={endGesture}
+              learn={{ kind: "track", trackId: track.id, prop: "volume" }}
               title={`Volume ${formatDb(track.volume)} dB`}
             />
             <Knob
@@ -149,6 +150,7 @@ export const TrackHeader = memo(function TrackHeader({ track, index, selected }:
               onBegin={beginGesture}
               onChange={(v) => gesture((p) => void (draftTrack(p, track.id)!.pan = Math.round(v * 100) / 100))}
               onEnd={endGesture}
+              learn={{ kind: "track", trackId: track.id, prop: "pan" }}
               title={`Pan ${track.pan === 0 ? "C" : track.pan < 0 ? `L${Math.round(-track.pan * 100)}` : `R${Math.round(track.pan * 100)}`}`}
             />
           </div>

@@ -4489,3 +4489,90 @@ input.text-input.title.tape:focus {
   direction: rtl;
   text-align: left;
 }
+
+/* ---------------------------------------------------------------- MIDI learn */
+
+.learn-banner {
+  position: fixed;
+  bottom: 52px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  padding: 7px 8px 7px 14px;
+  background: #1d1d1f;
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color: var(--text-0);
+  font-size: 12px;
+}
+.learn-banner b {
+  color: var(--accent);
+  font-weight: 600;
+}
+.learning [data-learn] {
+  position: relative;
+  cursor: crosshair !important;
+  outline: 1px dashed rgba(243, 163, 59, 0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.learning [data-learn]:hover {
+  outline: 1px solid var(--accent);
+  background-color: var(--accent-soft);
+}
+.learning [data-learn][data-learn-armed] {
+  outline: 2px solid var(--accent);
+  background-color: var(--accent-soft);
+  animation: pulse 0.9s ease-in-out infinite;
+}
+.learning [data-learn] * {
+  cursor: crosshair !important;
+}
+.learning [data-learn][data-learn-cc]::after {
+  content: attr(data-learn-cc);
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  z-index: 5;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: var(--accent);
+  color: #1a1206;
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.midi-ch-select {
+  font-family: var(--mono);
+}
+.midi-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.midi-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--line);
+}
+.midi-table td.cc {
+  font-family: var(--mono);
+  color: var(--accent);
+  white-space: nowrap;
+}
+.midi-table td.missing {
+  color: var(--text-2);
+  font-style: italic;
+}
+.midi-monitor {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-1);
+}

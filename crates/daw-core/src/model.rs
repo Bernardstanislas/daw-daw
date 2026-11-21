@@ -75,6 +75,8 @@ pub struct Track {
     pub mute: bool,
     pub solo: bool,
     pub armed: bool,
+    /// MIDI channel (1..16) whose notes always play this track, whatever is selected.
+    pub midi_channel: Option<u8>,
     pub instrument: Option<DeviceState>,
     pub effects: Vec<DeviceState>,
     pub clips: Vec<Clip>,

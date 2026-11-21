@@ -13,6 +13,30 @@ import { PromptHost } from "./components/Prompt";
 import { Updater } from "./components/Updater";
 import { StatusBar } from "./components/StatusBar";
 import { clamp, capturePointer } from "./lib/music";
+import { setLearnMode, targetLabel, useMidiLearn } from "./lib/midiMap";
+
+/** Hint shown while MIDI learn is on. */
+function LearnBanner() {
+  const active = useMidiLearn((s) => s.active);
+  const armed = useMidiLearn((s) => s.armed);
+  const label = useStore((s) => (armed ? targetLabel(s.project, armed) : null));
+  if (!active) return null;
+  return (
+    <div className="learn-banner">
+      <span className="lamp lit" />
+      {armed ? (
+        <span>
+          Move a knob, fader or button on your keyboard to control <b>{label}</b>
+        </span>
+      ) : (
+        <span>MIDI learn: click a control, then move a knob of your keyboard. Right-click a control to unmap it.</span>
+      )}
+      <button className="btn small" onClick={() => setLearnMode(false)}>
+        Done (Esc)
+      </button>
+    </div>
+  );
+}
 
 function BottomPanel() {
   const bottom = useStore((s) => s.ui.bottom);
@@ -67,6 +91,7 @@ export default function App() {
   const page = useStore((s) => s.ui.page);
   const browser = useStore((s) => s.ui.browser);
   const browserWidth = useStore((s) => s.ui.browserWidth);
+  const learning = useMidiLearn((s) => s.active);
   useEffect(() => {
     // The sampler's sample set lives outside the app (proprietary audio): say when it is missing.
     if (!isTauri) return;
@@ -103,8 +128,9 @@ export default function App() {
     };
   }, []);
   return (
-    <div className="app">
+    <div className={`app ${learning ? "learning" : ""}`}>
       <TopBar />
+      <LearnBanner />
       <div className="main" style={{ gridTemplateColumns: `${browser ? `${browserWidth}px ` : ""}1fr` }}>
         {browser && (
           <div className="side-panel">

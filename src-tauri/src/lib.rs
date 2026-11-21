@@ -547,15 +547,18 @@ fn connect_midi(app: &AppHandle, ctrl: Arc<Mutex<Controller>>) -> MidiInputs {
     let app = app.clone();
     MidiInputs::connect_all(Arc::new(move |m: MidiMsg| {
         match m {
-            MidiMsg::NoteOn { pitch, velocity } => {
-                ctrl.lock().send(Command::LiveNote { handle: None, pitch, velocity: velocity as f32 / 127.0, on: true, record: true });
-                let _ = app.emit("midi-input", (pitch, velocity, true));
+            MidiMsg::NoteOn { channel, pitch, velocity } => {
+                ctrl.lock().midi_note(channel, pitch, velocity as f32 / 127.0, true);
+                let _ = app.emit("midi-input", (pitch, velocity, true, channel));
             }
-            MidiMsg::NoteOff { pitch } => {
-                ctrl.lock().send(Command::LiveNote { handle: None, pitch, velocity: 0.0, on: false, record: true });
-                let _ = app.emit("midi-input", (pitch, 0u8, false));
+            MidiMsg::NoteOff { channel, pitch } => {
+                ctrl.lock().midi_note(channel, pitch, 0.0, false);
+                let _ = app.emit("midi-input", (pitch, 0u8, false, channel));
             }
-            MidiMsg::Control { .. } => {}
+            // Controllers are mapped to parameters by the UI (MIDI learn).
+            MidiMsg::Control { channel, cc, value } => {
+                let _ = app.emit("midi-cc", (channel, cc, value));
+            }
         }
     }))
 }

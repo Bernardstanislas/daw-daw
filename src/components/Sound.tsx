@@ -11,7 +11,8 @@ import { capturePointer, noteName } from "../lib/music";
 import { endDrag, readDrag } from "../lib/dnd";
 import { DevicePanel } from "./DevicePanel";
 import { MenuButton } from "./Menu";
-import { addEffectMenu } from "./arrange/menus";
+import { addEffectMenu, midiChannelMenu } from "./arrange/menus";
+import { useMidiLearn } from "../lib/midiMap";
 import { Meter } from "./controls";
 import { IconMic, IconPlus, IconSynth } from "./icons";
 import { promptText } from "./Prompt";
@@ -170,6 +171,21 @@ function InstrumentSelect({ track }: { track: Track }) {
   );
 }
 
+/** The MIDI channel that plays this track (pads on channel 10 → drums, keys → the selected synth). */
+function MidiInput({ track }: { track: Track }) {
+  const learning = useMidiLearn((s) => s.channelLearn === track.id);
+  const ch = track.midiChannel ?? null;
+  return (
+    <MenuButton
+      className={`btn small midi-ch-select ${learning ? "on" : ""}`}
+      items={() => midiChannelMenu(track)}
+      title="MIDI input: which channel of your keyboard plays this track. “Follow selection” = the keys play the selected track."
+    >
+      {learning ? "Play a note…" : ch === null ? "MIDI: follow selection" : `MIDI ch ${ch}`}
+    </MenuButton>
+  );
+}
+
 /** Mute / solo and level of the track being worked on, at the right of its first section title. */
 function TrackMonitor({ track }: { track: Track }) {
   return (
@@ -213,6 +229,7 @@ function TrackSound({ track }: { track: Track }) {
             <div className="section-title">
               <span>Instrument</span>
               <TrackMonitor track={track} />
+              <MidiInput track={track} />
               <InstrumentSelect track={track} />
             </div>
             {track.instrument && <DevicePanel device={track.instrument} target={track.id} isInstrument />}

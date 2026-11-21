@@ -1,6 +1,7 @@
 // Global keyboard shortcuts and "musical typing" (computer keyboard as a MIDI keyboard).
 
 import { commit, PAGES, redo, setUi, undo, useStore } from "./store";
+import { setLearnMode, useMidiLearn } from "./midiMap";
 import { livePosition, liveNote, record, seek, togglePlay, useTransport } from "./engine";
 import { copyClips, cutClips, deleteClips, duplicateClips, pasteClips, splitClipsAt, deleteTrack } from "./actions";
 import { exportMixdown, newProject, openProject, saveProject } from "./fileOps";
@@ -93,6 +94,10 @@ function onKeyDown(e: KeyboardEvent) {
       case ",":
         e.preventDefault();
         useStore.setState({ dialog: "settings" });
+        return;
+      case "l":
+        e.preventDefault();
+        setLearnMode(!useMidiLearn.getState().active);
         return;
       case "c":
         if (sel.length) {

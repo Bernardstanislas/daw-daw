@@ -25,6 +25,7 @@ import {
   IconHelp,
 } from "./icons";
 import { TEMPLATES } from "../lib/templates";
+import { setLearnMode, useLearn, useMidiLearn } from "../lib/midiMap";
 
 const mod = navigator.platform.includes("Mac") ? "⌘" : "Ctrl+";
 
@@ -103,6 +104,13 @@ export function TopBar() {
   const projectPath = useStore((s) => s.projectPath);
   const dirty = useStore((s) => s.savedProject !== s.project);
   const arrange = ui.page === "arrange";
+  const learning = useMidiLearn((s) => s.active);
+  const lPlay = useLearn({ kind: "transport", action: "play" });
+  const lStop = useLearn({ kind: "transport", action: "stop" });
+  const lRec = useLearn({ kind: "transport", action: "record" });
+  const lLoop = useLearn({ kind: "transport", action: "loop" });
+  const lMetro = useLearn({ kind: "transport", action: "metronome" });
+  const lTempo = useLearn({ kind: "tempo" });
 
   return (
     <header className="topbar">
@@ -130,14 +138,14 @@ export function TopBar() {
           <button className="tbtn" onClick={() => seek(project.loop.enabled ? project.loop.start : 0)} title="Go to start (Home)">
             <IconRewind />
           </button>
-          <button className="tbtn" onClick={stop} title="Stop (Space) — press twice to rewind">
+          <button className="tbtn" onClick={stop} title="Stop (Space) — press twice to rewind" {...lStop}>
             <IconStop />
           </button>
-          <button className={`tbtn play ${playing ? "on" : ""}`} onClick={() => (playing ? stop() : play())} title="Play / Pause (Space)">
+          <button className={`tbtn play ${playing ? "on" : ""}`} onClick={() => (playing ? stop() : play())} title="Play / Pause (Space)" {...lPlay}>
             <span className={`lamp ${playing ? "lit" : ""}`} />
             {playing ? <IconPause /> : <IconPlay />}
           </button>
-          <button className={`tbtn rec ${recording ? "on" : ""}`} onClick={record} title="Record (R)">
+          <button className={`tbtn rec ${recording ? "on" : ""}`} onClick={record} title="Record (R)" {...lRec}>
             <span className={`lamp rec ${recording ? "lit" : ""}`} />
             <IconRecord />
           </button>
@@ -149,6 +157,7 @@ export function TopBar() {
               })
             }
             title="Loop (L)"
+            {...lLoop}
           >
             <span className={`lamp ${project.loop.enabled ? "lit" : ""}`} />
             <IconLoop />
@@ -167,6 +176,7 @@ export function TopBar() {
               });
             }}
             title={`Metronome (K) — right-click: count-in ${project.metronome.countInBars} bar(s)`}
+            {...lMetro}
           >
             <span className={`lamp ${project.metronome.enabled ? "lit" : ""}`} />
             <IconMetronome />
@@ -176,7 +186,7 @@ export function TopBar() {
         <div className="lcd">
         <TimeDisplay />
         <div className="lcd-sep" />
-        <div className="lcd-cell tempo-box">
+        <div className="lcd-cell tempo-box" {...lTempo}>
           <DragNumber
             className="tempo"
             value={project.bpm}
@@ -257,6 +267,14 @@ export function TopBar() {
         <button className={`icon-btn ${ui.typing ? "on" : ""}`} onClick={() => setUi({ typing: !ui.typing })} title="Musical typing: play notes with your computer keyboard (Caps Lock)">
           <span className={`lamp ${ui.typing ? "lit" : ""}`} />
           <IconKeyboard />
+        </button>
+        <button
+          className={`icon-btn learn-btn ${learning ? "on" : ""}`}
+          onClick={() => setLearnMode(!learning)}
+          title={`MIDI learn (${mod}L): click a control, then move a knob of your MIDI keyboard`}
+        >
+          <span className={`lamp ${learning ? "lit" : ""}`} />
+          <span className="learn-btn-label">MIDI</span>
         </button>
         <button className="icon-btn" onClick={() => useStore.setState({ dialog: "export" })} title="Export mixdown">
           <IconExport />

@@ -10,6 +10,7 @@ import { IconArrowLeft, IconArrowRight, IconChevronDown, IconChevronRight, IconC
 import { isPluginType, useCatalog } from "../lib/catalog";
 import { backend, isTauri } from "../lib/backend";
 import { useStore } from "../lib/store";
+import { useLearn } from "../lib/midiMap";
 
 /** Steps to the previous / next preset, like the ‹ › keys of a hardware synth. */
 function stepPreset(presets: { name: string }[], device: DeviceState, dir: number) {
@@ -34,9 +35,11 @@ function setParamCommit(deviceId: string, pid: string, v: number) {
 
 function ParamControl({ device, spec }: { device: DeviceState; spec: ParamSpec }) {
   const v = device.params[spec.id] ?? spec.default;
+  const target = { kind: "param", deviceId: device.id, paramId: spec.id } as const;
+  const learn = useLearn(target);
   if (spec.kind === "choice") {
     return (
-      <label className="param choice" title={spec.name}>
+      <label className="param choice" title={spec.name} {...learn}>
         <span className="param-name">{spec.name}</span>
         <select value={Math.round(v)} onChange={(e) => setParamCommit(device.id, spec.id, +e.target.value)}>
           {spec.choices.map((c, i) => (
@@ -51,7 +54,7 @@ function ParamControl({ device, spec }: { device: DeviceState; spec: ParamSpec }
   if (spec.kind === "toggle") {
     return (
       <div className="param toggle">
-        <button className={`toggle-btn ${v >= 0.5 ? "on" : ""}`} onClick={() => setParamCommit(device.id, spec.id, v >= 0.5 ? 0 : 1)}>
+        <button className={`toggle-btn ${v >= 0.5 ? "on" : ""}`} onClick={() => setParamCommit(device.id, spec.id, v >= 0.5 ? 0 : 1)} {...learn}>
           {spec.name}
         </button>
       </div>
@@ -73,6 +76,7 @@ function ParamControl({ device, spec }: { device: DeviceState; spec: ParamSpec }
         onChange={(x) => setParamGesture(device.id, spec.id, x)}
         onEnd={endGesture}
         title={`${spec.name}: ${formatParam(spec, v)} (double-click: reset)`}
+        learn={target}
       />
     </div>
   );

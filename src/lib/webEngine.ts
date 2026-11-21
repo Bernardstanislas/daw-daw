@@ -279,15 +279,23 @@ export function rescanMidi(): string[] {
 function onMidi(data: Uint8Array | null) {
   if (!data || data.length < 3) return;
   const status = data[0] & 0xf0;
-  const pitch = data[1];
-  const vel = data[2];
-  if (status === 0x90 && vel > 0) {
-    liveNote(pitch, vel / 127, true, null);
-    emit("midi-input", [pitch, vel, true]);
-  } else if (status === 0x80 || (status === 0x90 && vel === 0)) {
-    liveNote(pitch, 0, false, null);
-    emit("midi-input", [pitch, 0, false]);
+  const channel = (data[0] & 0x0f) + 1;
+  const [, d1, d2] = data;
+  if (status === 0x90 && d2 > 0) {
+    midiNote(channel, d1, d2 / 127, true);
+    emit("midi-input", [d1, d2, true, channel]);
+  } else if (status === 0x80 || (status === 0x90 && d2 === 0)) {
+    midiNote(channel, d1, 0, false);
+    emit("midi-input", [d1, 0, false, channel]);
+  } else if (status === 0xb0) {
+    emit("midi-cc", [channel, d1, d2]);
   }
+}
+
+/** Controller note: the engine routes it by channel (see Controller::midi_note). */
+function midiNote(channel: number, pitch: number, velocity: number, on: boolean) {
+  ctx?.resume();
+  post({ type: "midi", channel, pitch, velocity, on });
 }
 
 // ------------------------------------------------------------------ export

@@ -266,3 +266,32 @@ fn dump_catalog() {
     let json = serde_json::to_string_pretty(&crate::dsp::registry::all_specs()).unwrap();
     std::fs::write(concat!(env!("CARGO_MANIFEST_DIR"), "/../../src/lib/catalog.fixture.json"), json).unwrap();
 }
+
+#[test]
+fn midi_channel_routes_notes_to_its_track() {
+    let (mut c, mut e) = crate::engine::controller::Controller::new(48_000.0);
+    let mut p = base_project();
+    let mut drums = midi_track("drums", "pulse", vec![]);
+    drums.midi_channel = Some(10);
+    p.tracks = vec![midi_track("keys", "pulse", vec![]), drums];
+    c.sync(&p);
+    c.set_live_target(Some("keys".into()));
+    let mut buf = vec![0f32; 512 * 2];
+    e.process(&mut buf, 2);
+    // Channel 10 → drums, even though "keys" is the live target.
+    c.midi_note(10, 60, 1.0, true);
+    for _ in 0..8 {
+        e.process(&mut buf, 2);
+    }
+    let meters: HashMap<String, (f32, f32)> = c.track_meters().into_iter().map(|(id, l, r)| (id, (l, r))).collect();
+    assert!(meters["drums"].0 > 0.01, "drums play channel 10");
+    assert!(meters["keys"].0 < 1e-4, "keys stay silent");
+    // Channel 1 has no track: it goes to the live target.
+    c.midi_note(10, 60, 0.0, false);
+    c.midi_note(1, 64, 1.0, true);
+    for _ in 0..8 {
+        e.process(&mut buf, 2);
+    }
+    let meters: HashMap<String, (f32, f32)> = c.track_meters().into_iter().map(|(id, l, r)| (id, (l, r))).collect();
+    assert!(meters["keys"].0 > 0.01, "unclaimed channel plays the live target");
+}

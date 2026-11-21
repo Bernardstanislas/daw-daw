@@ -6,6 +6,7 @@ import { backend, isTauri, listen, openDialog, type AudioStatus } from "../lib/b
 import { exportMixdown, newProject } from "../lib/fileOps";
 import { TEMPLATES } from "../lib/templates";
 import { IconClose } from "./icons";
+import { ccLabel, removeMapping, setLearnMode, setTrackChannel, targetLabel, useMidiLearn } from "../lib/midiMap";
 
 function Modal({ title, children, onClose, wide }: { title: string; children: React.ReactNode; onClose: () => void; wide?: boolean }) {
   useEffect(() => {
@@ -146,8 +147,86 @@ function SettingsDialog() {
         </div>
         <div className="form-info small">Projects, recordings and exports are stored in {st.baseDir}</div>
         {!isTauri && <div className="form-error">Running in a browser: audio is disabled (UI preview only).</div>}
+        <MidiControllerSettings />
       </div>
     </Modal>
+  );
+}
+
+/** MIDI activity, the channel each track listens to, and the controller mappings. */
+function MidiControllerSettings() {
+  const last = useMidiLearn((s) => s.last);
+  const project = useStore((s) => s.project);
+  const tracks = project.tracks.filter((t) => t.kind === "instrument");
+  const map = project.midiMap ?? [];
+  return (
+    <>
+      <div className="form-row">
+        <span>
+          <b>Controller</b>
+        </span>
+        <span className="midi-monitor" title="Last message received: play a pad or turn a knob to see its channel">
+          {last ? `${last.type === "note" ? `Note ${last.number}` : `CC${last.number}`} · ch ${last.channel} · ${last.value}` : "No MIDI received yet"}
+        </span>
+      </div>
+      <div className="form-info small">
+        Each track can listen to its own MIDI channel: set the drum track to the pads' channel (often 10) and the keys keep playing the selected
+        track. Turn MIDI learn on (MIDI button, ⌘L), click any control, then move a knob, fader or button.
+      </div>
+      {tracks.length > 0 && (
+        <table className="midi-table">
+          <tbody>
+            {tracks.map((t) => (
+              <tr key={t.id}>
+                <td>{t.name}</td>
+                <td>
+                  <select value={t.midiChannel ?? 0} onChange={(e) => setTrackChannel(t.id, +e.target.value || null)}>
+                    <option value={0}>Follow selection</option>
+                    {Array.from({ length: 16 }, (_, i) => (
+                      <option key={i} value={i + 1}>
+                        Channel {i + 1}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <div className="form-row">
+        <span>Mappings ({map.length})</span>
+        <button
+          className="btn small"
+          onClick={() => {
+            useStore.setState({ dialog: null });
+            setLearnMode(true);
+          }}
+        >
+          MIDI learn…
+        </button>
+      </div>
+      {map.length > 0 && (
+        <table className="midi-table">
+          <tbody>
+            {map.map((m) => {
+              const label = targetLabel(project, m.target);
+              return (
+                <tr key={m.id}>
+                  <td className="cc">{ccLabel(m)}</td>
+                  <td className={label ? "" : "missing"}>{label ?? "deleted control"}</td>
+                  <td>
+                    <button className="icon-btn tiny" onClick={() => removeMapping(m.id)} title="Remove this mapping">
+                      <IconClose size={10} />
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
+    </>
   );
 }
 

@@ -12,6 +12,7 @@ document.fonts.add(new FontFace("DSEG7", `url(${dseg7})`));
 import { loadCatalog } from "./lib/catalog";
 import { initEngineBridge } from "./lib/engine";
 import { initKeyboard } from "./lib/keyboard";
+import { initMidiControl } from "./lib/midiMap";
 import { initStepRecord, initStepRecordKeys } from "./lib/stepRecord";
 import { loadDocument, restoreSession, startAutosave } from "./lib/fileOps";
 import { TEMPLATES } from "./lib/templates";
@@ -31,6 +32,7 @@ async function boot() {
   }
   initEngineBridge();
   initKeyboard();
+  initMidiControl();
   initStepRecord();
   initStepRecordKeys();
   startAutosave();

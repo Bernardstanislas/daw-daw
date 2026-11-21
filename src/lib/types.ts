@@ -74,6 +74,8 @@ export interface Track {
   mute: boolean;
   solo: boolean;
   armed: boolean;
+  /** MIDI channel (1..16) whose notes always play this track; unset = follows the selection. */
+  midiChannel?: number | null;
   instrument: DeviceState | null;
   effects: DeviceState[];
   clips: Clip[];
@@ -112,6 +114,24 @@ export interface Project {
   master: { volume: number; effects: DeviceState[] };
   assets: AssetRef[];
   sections: Section[];
+  /** Hardware controllers (CC) mapped to settings, made with MIDI learn. */
+  midiMap?: MidiMapping[];
+}
+
+/** A setting a MIDI controller can drive. */
+export type MidiTarget =
+  | { kind: "param"; deviceId: string; paramId: string }
+  | { kind: "track"; trackId: string; prop: "volume" | "pan" | "mute" | "solo" | "armed" }
+  | { kind: "master" }
+  | { kind: "tempo" }
+  | { kind: "transport"; action: "play" | "stop" | "record" | "loop" | "metronome" };
+
+export interface MidiMapping {
+  id: string;
+  /** 1..16 */
+  channel: number;
+  cc: number;
+  target: MidiTarget;
 }
 
 // ---- Device catalog (from Rust `get_catalog`)

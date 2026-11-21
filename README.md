@@ -76,6 +76,15 @@ projet.
   Audio & MIDI settings → « Samples folder »). Il doit contenir `instruments/<id>.wav` et
   `drums/<id>.wav` (noms dans `crates/daw-core/src/dsp/sample_data.rs`). Un son absent reste muet,
   et l'app le signale au démarrage. Le bouton « Library » de l'onglet Files ouvre ce dossier.
+- **Clavier MIDI** (KeyLab, etc.) :
+  - *Canaux* : chaque piste instrument peut écouter un canal MIDI (menu « MIDI » sur la page Sound,
+    clic droit sur la piste → MIDI input, ou Audio & MIDI settings). Mettez la batterie sur le canal
+    des pads (souvent 10) : les pads jouent toujours la batterie et les touches la piste sélectionnée.
+    « Learn from next note… » prend le canal de la prochaine note jouée.
+  - *MIDI learn* (bouton MIDI ou ⌘L) : cliquez un réglage (n'importe quel paramètre d'instrument ou
+    d'effet, volume/pan/mute/solo/arm, volume master, tempo, transport), puis bougez un potard, un fader
+    ou un bouton du clavier. Clic droit en mode learn = supprimer. Les mappings sont enregistrés avec le
+    projet et listés dans Audio & MIDI settings.
 - **Plugins tiers (app de bureau, macOS)** : tous les Audio Units installés (Vital, Surge XT,
   Zebra, Serum…) apparaissent dans le groupe « Plugins » des onglets Instruments et Effects.
   Un clic sur un instrument le pré-écoute au clavier MIDI, un glisser ou un double-clic l'ajoute.

@@ -12,6 +12,7 @@ import { MenuButton, openContextMenu } from "./Menu";
 import { addEffectMenu, trackMenu } from "./arrange/menus";
 import { endDrag, readDrag } from "../lib/dnd";
 import { IconMic, IconPlus, IconSynth } from "./icons";
+import { useLearn } from "../lib/midiMap";
 
 /** Insert slots of a strip: click = bypass, right-click = more, "+" = add. */
 function Inserts({ target, effects }: { target: string | "master"; effects: DeviceState[] }) {
@@ -85,6 +86,9 @@ function useDeviceDrop(target: string | "master", acceptsInstrument: boolean) {
 const Strip = memo(function Strip({ track, selected, faderHeight }: { track: Track; selected: boolean; faderHeight: number }) {
   useCatalog((s) => s.specs);
   const drop = useDeviceDrop(track.id, track.kind === "instrument");
+  const learnMute = useLearn({ kind: "track", trackId: track.id, prop: "mute" });
+  const learnSolo = useLearn({ kind: "track", trackId: track.id, prop: "solo" });
+  const learnArm = useLearn({ kind: "track", trackId: track.id, prop: "armed" });
   const inst = track.instrument;
   const instLabel = inst ? (inst.preset && inst.preset !== "Default" ? inst.preset : deviceName(inst)) : "Audio";
   return (
@@ -114,15 +118,16 @@ const Strip = memo(function Strip({ track, selected, faderHeight }: { track: Tra
         onChange={(v) => gesture((p) => void (draftTrack(p, track.id)!.pan = Math.round(v * 100) / 100))}
         onEnd={endGesture}
         title="Pan"
+        learn={{ kind: "track", trackId: track.id, prop: "pan" }}
       />
       <div className="strip-buttons">
-        <button className={`tb mute ${track.mute ? "on" : ""}`} onClick={() => toggleTrackFlag(track.id, "mute")} title="Mute">
+        <button className={`tb mute ${track.mute ? "on" : ""}`} onClick={() => toggleTrackFlag(track.id, "mute")} title="Mute" {...learnMute}>
           M
         </button>
-        <button className={`tb solo ${track.solo ? "on" : ""}`} onClick={(e) => toggleTrackFlag(track.id, "solo", e.altKey || e.metaKey)} title="Solo (⌥-click: exclusive)">
+        <button className={`tb solo ${track.solo ? "on" : ""}`} onClick={(e) => toggleTrackFlag(track.id, "solo", e.altKey || e.metaKey)} title="Solo (⌥-click: exclusive)" {...learnSolo}>
           S
         </button>
-        <button className={`tb arm ${track.armed ? "on" : ""}`} onClick={() => toggleTrackFlag(track.id, "armed")} title="Arm for recording">
+        <button className={`tb arm ${track.armed ? "on" : ""}`} onClick={() => toggleTrackFlag(track.id, "armed")} title="Arm for recording" {...learnArm}>
           ●
         </button>
       </div>
@@ -133,6 +138,7 @@ const Strip = memo(function Strip({ track, selected, faderHeight }: { track: Tra
           onBegin={beginGesture}
           onChange={(v) => gesture((p) => void (draftTrack(p, track.id)!.volume = v))}
           onEnd={endGesture}
+          learn={{ kind: "track", trackId: track.id, prop: "volume" }}
         />
         <Meter source={track.armed && track.kind === "audio" ? "input" : track.id} thickness={6} />
       </div>
@@ -153,7 +159,7 @@ function MasterStrip({ faderHeight }: { faderHeight: number }) {
       </div>
       <Inserts target="master" effects={master.effects} />
       <div className="strip-fader-row" style={{ height: faderHeight + 4 }}>
-        <Fader db={master.volume} height={faderHeight} onBegin={beginGesture} onChange={(v) => gesture((p) => void (p.master.volume = v))} onEnd={endGesture} />
+        <Fader db={master.volume} height={faderHeight} onBegin={beginGesture} onChange={(v) => gesture((p) => void (p.master.volume = v))} onEnd={endGesture} learn={{ kind: "master" }} />
         <Meter source="master" thickness={8} />
       </div>
       <div className="strip-db">{formatDb(master.volume)} dB</div>

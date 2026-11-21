@@ -143,6 +143,22 @@ impl Controller {
         self.mirrors.get(track_id).map(|m| m.handle)
     }
 
+    /// Track listening to MIDI channel `channel` (1..16), if any.
+    pub fn midi_route(&self, channel: u8) -> Option<Handle> {
+        self.project
+            .tracks
+            .iter()
+            .find(|t| t.midi_channel == Some(channel) && t.kind == crate::model::TrackKind::Instrument)
+            .and_then(|t| self.handle_of(&t.id))
+    }
+
+    /// A note from a MIDI controller: goes to the track listening to its channel,
+    /// else to the live target. Recordable either way.
+    pub fn midi_note(&mut self, channel: u8, pitch: u8, velocity: f32, on: bool) {
+        let handle = self.midi_route(channel);
+        self.send(Command::LiveNote { handle, pitch: pitch.min(127), velocity: velocity.clamp(0.0, 1.0), on, record: true });
+    }
+
     pub fn collect_garbage(&mut self) {
         while let Ok(g) = self.garbage.pop() {
             drop(g);

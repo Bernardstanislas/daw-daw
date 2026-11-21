@@ -71,6 +71,7 @@ export function duplicateTrack(id: string) {
     id: uid("trk"),
     name: `${src.name} copy`,
     armed: false,
+    midiChannel: null,
   };
   copy.clips = copy.clips.map((c) => ({ ...c, id: uid("clip"), notes: c.notes.map((n) => ({ ...n, id: uid("n") })) }));
   copy.effects = copy.effects.map((e) => ({ ...e, id: uid("dev") }));

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useTransport } from "../lib/engine";
 import { clamp, dbToFader, faderToDb, formatDb, capturePointer } from "../lib/music";
-import type { ParamSpec } from "../lib/types";
+import type { MidiTarget, ParamSpec } from "../lib/types";
+import { useLearn } from "../lib/midiMap";
 
 // ---------------------------------------------------------------- value mapping
 
@@ -77,6 +78,8 @@ interface KnobProps {
   onChange: (v: number) => void;
   onEnd?: () => void;
   title?: string;
+  /** Setting that MIDI learn can map to this knob. */
+  learn?: MidiTarget;
 }
 
 export function Knob({
@@ -95,7 +98,9 @@ export function Knob({
   onChange,
   onEnd,
   title,
+  learn,
 }: KnobProps) {
+  const learnProps = useLearn(learn);
   const [active, setActive] = useState(false);
   const startNorm = useRef(0);
   const norm = clamp(toNorm(value, min, max, log), 0, 1);
@@ -190,7 +195,7 @@ export function Knob({
   });
 
   return (
-    <div className={`knob ${active ? "active" : ""}`} title={title ?? label}>
+    <div className={`knob ${active ? "active" : ""}`} title={title ?? label} {...learnProps}>
       <div
         ref={svgRef}
         className="knob-dial"
@@ -222,12 +227,14 @@ interface FaderProps {
   onBegin?: () => void;
   onChange: (db: number) => void;
   onEnd?: () => void;
+  learn?: MidiTarget;
 }
 
 const FADER_MARKS = [6, 0, -6, -12, -24, -48];
 
 /** Console-style fader: printed dB scale, a slot and a grooved cap. */
-export function Fader({ db, height = 160, onBegin, onChange, onEnd }: FaderProps) {
+export function Fader({ db, height = 160, onBegin, onChange, onEnd, learn }: FaderProps) {
+  const learnProps = useLearn(learn);
   const start = useRef(0);
   const pos = dbToFader(db);
   const onPointerDown = useVerticalDrag(
@@ -253,6 +260,7 @@ export function Fader({ db, height = 160, onBegin, onChange, onEnd }: FaderProps
         onEnd?.();
       }}
       title={`${formatDb(db)} dB — double-click: 0 dB`}
+      {...learnProps}
     >
       <div className="fader-scale" aria-hidden>
         {FADER_MARKS.map((m) => (

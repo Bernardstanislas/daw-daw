@@ -19,6 +19,7 @@ import { livePosition } from "../../lib/engine";
 import { addEffect } from "../../lib/actions";
 import { useCatalog } from "../../lib/catalog";
 import { promptText } from "../Prompt";
+import { setTrackChannel, useMidiLearn } from "../../lib/midiMap";
 
 const mod = navigator.platform.includes("Mac") ? "⌘" : "Ctrl+";
 
@@ -116,7 +117,23 @@ export function trackMenu(track: Track): MenuItem[] {
     { label: track.mute ? "Unmute" : "Mute", onClick: () => toggleTrackFlag(track.id, "mute") },
     { label: track.solo ? "Unsolo" : "Solo", onClick: () => toggleTrackFlag(track.id, "solo") },
     { label: track.armed ? "Disarm" : "Arm for recording", onClick: () => toggleTrackFlag(track.id, "armed") },
+    ...(track.kind === "instrument" ? [{ label: "MIDI input", submenu: midiChannelMenu(track) }] : []),
     { separator: true },
     { label: "Delete track", danger: true, onClick: () => deleteTrack(track.id) },
+  ];
+}
+
+/** Which MIDI channel plays a track: the selection follows the keyboard, or a fixed channel (pads → drums). */
+export function midiChannelMenu(track: Track): MenuItem[] {
+  const ch = track.midiChannel ?? null;
+  return [
+    { label: "Follow selection", checked: ch === null, onClick: () => setTrackChannel(track.id, null) },
+    { label: "Learn from next note…", onClick: () => useMidiLearn.setState({ channelLearn: track.id }) },
+    { separator: true },
+    ...Array.from({ length: 16 }, (_, i) => ({
+      label: `Channel ${i + 1}${i === 9 ? " (drums)" : ""}`,
+      checked: ch === i + 1,
+      onClick: () => setTrackChannel(track.id, i + 1),
+    })),
   ];
 }
