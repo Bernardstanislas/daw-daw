@@ -121,7 +121,7 @@ function DeviceList({ specs, filter, kind }: { specs: DeviceSpec[]; filter: stri
   );
 }
 
-/** Installed third-party plugins (Audio Units on macOS). */
+/** Installed third-party plugins (Audio Units on macOS, VST3 everywhere). */
 function PluginGroup({ kind, filter }: { kind: "instrument" | "effect"; filter: string }) {
   const plugins = useCatalog((s) => s.plugins);
   const preview = useStore((s) => s.preview);
@@ -130,7 +130,7 @@ function PluginGroup({ kind, filter }: { kind: "instrument" | "effect"; filter: 
   if (!isTauri) {
     return (
       <Group title="Plugins" defaultOpen={false}>
-        <div className="browser-note">VST / Audio Unit plugins are available in the desktop app.</div>
+        <div className="browser-note">VST3 / Audio Unit plugins are available in the desktop app.</div>
       </Group>
     );
   }
@@ -167,7 +167,11 @@ function PluginGroup({ kind, filter }: { kind: "instrument" | "effect"; filter: 
           }}
         />
       ))}
-      {list.length === 0 && <div className="browser-note">{filter ? "No matching plugin." : "No plugins found."}</div>}
+      {list.length === 0 && (
+        <div className="browser-note">
+          {filter ? "No matching plugin." : "No plugins found. VST3 plugins in other folders: Settings → Audio & MIDI → Plugin folders."}
+        </div>
+      )}
       <div className="browser-note">
         <button
           className="btn small"

@@ -33,6 +33,8 @@ pub struct AudioSettings {
     pub record_offset_ms: f64,
     /// Folder holding the sampler's sample set (default: `<base>/Samples`).
     pub samples_dir: Option<String>,
+    /// Extra folders scanned for VST3 plugins, in addition to the standard ones.
+    pub plugin_dirs: Vec<String>,
 }
 
 /// Where the sampler's sample set was loaded from, and what is missing.
@@ -86,6 +88,12 @@ fn load_samples(settings: &AudioSettings) -> SamplesStatus {
         eprintln!("[samples] {} of {} files missing in {}", missing.len(), dsp::sampler::sample_files().count(), dir.display());
     }
     SamplesStatus { dir: dir.to_string_lossy().into_owned(), total: dsp::sampler::sample_files().count(), missing }
+}
+
+/// Hands the user's plugin folders to the VST3 scanner.
+fn apply_plugin_dirs(settings: &AudioSettings) {
+    let dirs = settings.plugin_dirs.iter().map(|d| d.trim()).filter(|d| !d.is_empty()).map(PathBuf::from).collect();
+    plugins::vst3::set_extra_dirs(dirs);
 }
 
 fn settings_path(app: &AppHandle) -> Option<PathBuf> {
@@ -147,7 +155,7 @@ fn sync_project(state: State<'_, AppState>, project: Project) {
     plugins::manager().prune(&project);
 }
 
-/// Installed third-party plugins (Audio Units on macOS).
+/// Installed third-party plugins (Audio Units on macOS, VST3 everywhere).
 #[tauri::command]
 async fn list_plugins(rescan: Option<bool>) -> Vec<plugins::PluginInfo> {
     tauri::async_runtime::spawn_blocking(move || plugins::manager().list(rescan.unwrap_or(false)))
@@ -369,6 +377,8 @@ struct AudioStatus {
     error: Option<String>,
     base_dir: String,
     samples: SamplesStatus,
+    /// Standard VST3 folders (always scanned), shown next to the user's own.
+    default_plugin_dirs: Vec<String>,
 }
 
 #[tauri::command]
@@ -382,16 +392,22 @@ fn get_audio_status(state: State<'_, AppState>) -> AudioStatus {
         error: state.audio_error.lock().clone(),
         base_dir: base_dir().to_string_lossy().into_owned(),
         samples: state.samples.lock().clone(),
+        default_plugin_dirs: plugins::vst3::default_dirs().iter().map(|d| d.to_string_lossy().into_owned()).collect(),
     }
 }
 
 #[tauri::command]
 fn set_audio_settings(app: AppHandle, state: State<'_, AppState>, settings: AudioSettings) -> CmdResult<OutputInfo> {
-    let (input_changed, samples_changed) = {
+    let (input_changed, samples_changed, plugin_dirs_changed) = {
         let old = state.settings.lock();
-        (old.input_device != settings.input_device, samples_dir(&old) != samples_dir(&settings))
+        (old.input_device != settings.input_device, samples_dir(&old) != samples_dir(&settings), old.plugin_dirs != settings.plugin_dirs)
     };
     *state.settings.lock() = settings.clone();
+    if plugin_dirs_changed {
+        // The scan itself runs in `list_plugins` (background), not on this thread.
+        apply_plugin_dirs(&settings);
+        plugins::manager().invalidate();
+    }
     if samples_changed {
         *state.samples.lock() = load_samples(&settings);
     }
@@ -582,6 +598,10 @@ pub fn run() {
             }
             let handle = app.handle().clone();
             let settings = load_settings(&handle);
+            if let Ok(dir) = handle.path().app_config_dir() {
+                plugins::vst3::set_cache_file(dir.join("vst3-cache.json"));
+            }
+            apply_plugin_dirs(&settings);
             let samples = load_samples(&settings);
             let rate = audio_io::probe_output_rate(settings.output_device.as_deref()).unwrap_or(48_000);
             let (ctrl, engine) = Controller::new(rate as f32);

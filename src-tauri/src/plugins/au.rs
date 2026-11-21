@@ -6,41 +6,27 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
 use anyhow::{Result, anyhow, bail};
-use serde::Serialize;
-
+use super::PluginInfo;
 use super::ffi::*;
 use daw_core::dsp::{Effect, Instrument, ParamValues, ProcessCtx};
 
 /// Largest slice rendered in one AudioUnitRender call.
 pub const MAX_FRAMES: usize = 1024;
 
-#[derive(Debug, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PluginInfo {
-    /// "au:<type><subtype><manufacturer>" (hex four-char codes).
-    pub id: String,
-    pub name: String,
-    pub vendor: String,
-    /// "instrument" | "effect"
-    pub kind: &'static str,
-    pub format: &'static str,
-}
-
-impl PluginInfo {
-    fn desc(&self) -> Option<AudioComponentDescription> {
-        let hex = self.id.strip_prefix("au:")?;
-        if hex.len() != 24 {
-            return None;
-        }
-        let p = |i: usize| u32::from_str_radix(&hex[i * 8..i * 8 + 8], 16).ok();
-        Some(AudioComponentDescription {
-            componentType: p(0)?,
-            componentSubType: p(1)?,
-            componentManufacturer: p(2)?,
-            componentFlags: 0,
-            componentFlagsMask: 0,
-        })
+/// The component description encoded in an "au:" plugin id.
+fn desc(info: &PluginInfo) -> Option<AudioComponentDescription> {
+    let hex = info.id.strip_prefix("au:")?;
+    if hex.len() != 24 {
+        return None;
     }
+    let p = |i: usize| u32::from_str_radix(&hex[i * 8..i * 8 + 8], 16).ok();
+    Some(AudioComponentDescription {
+        componentType: p(0)?,
+        componentSubType: p(1)?,
+        componentManufacturer: p(2)?,
+        componentFlags: 0,
+        componentFlagsMask: 0,
+    })
 }
 
 fn make_id(d: &AudioComponentDescription) -> String {
@@ -78,7 +64,7 @@ pub fn scan() -> Vec<PluginInfo> {
                 Some((v, n)) => (v.trim().to_string(), n.trim().to_string()),
                 None => (fourcc_str(d.componentManufacturer), full),
             };
-            out.push(PluginInfo { id: make_id(&d), name, vendor, kind, format: "AU" });
+            out.push(PluginInfo { id: make_id(&d), name, vendor, kind, format: "AU", path: None });
         }
     }
     out.sort_by(|a, b| (a.kind, a.vendor.to_lowercase(), a.name.to_lowercase()).cmp(&(b.kind, b.vendor.to_lowercase(), b.name.to_lowercase())));
@@ -194,7 +180,7 @@ fn check(status: OSStatus, what: &str) -> Result<()> {
 
 impl AuUnit {
     pub fn new(info: PluginInfo, sample_rate: f32) -> Result<Arc<Self>> {
-        let desc = info.desc().ok_or_else(|| anyhow!("bad plugin id {}", info.id))?;
+        let desc = desc(&info).ok_or_else(|| anyhow!("bad plugin id {}", info.id))?;
         let comp = unsafe { AudioComponentFindNext(std::ptr::null_mut(), &desc) };
         if comp.is_null() {
             bail!("{} is not installed", info.name);

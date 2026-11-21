@@ -46,9 +46,9 @@ export interface DeviceState {
   state?: string;
 }
 
-/** An installed third-party plugin (Audio Unit on macOS). */
+/** An installed third-party plugin (Audio Unit on macOS, VST3 on every desktop OS). */
 export interface PluginInfo {
-  /** Device type id, e.g. "au:…". */
+  /** Device type id: "au:…" or "vst3:…". */
   id: string;
   name: string;
   vendor: string;

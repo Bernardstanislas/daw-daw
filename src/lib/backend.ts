@@ -27,6 +27,8 @@ export interface AudioStatus {
   error: string | null;
   baseDir: string;
   samples: SamplesStatus;
+  /** Standard VST3 folders (always scanned). */
+  defaultPluginDirs: string[];
 }
 
 export interface SamplesStatus {
@@ -41,6 +43,8 @@ export interface AudioSettings {
   bufferSize: number | null;
   recordOffsetMs: number;
   samplesDir?: string | null;
+  /** Extra folders scanned for VST3 plugins, in addition to the standard ones. */
+  pluginDirs?: string[];
 }
 
 export interface DirEntry {
@@ -121,6 +125,7 @@ const web = (() => {
             error: st.failure,
             baseDir: "(browser)",
             samples: st.samples,
+            defaultPluginDirs: [],
           } as T;
         }
         case "set_audio_settings":

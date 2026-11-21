@@ -359,6 +359,168 @@ impl EditorWindow {
     }
 }
 
+// ------------------------------------------------------------------ VST3
+
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+
+use vst3::Steinberg::{IPlugFrame, IPlugFrameTrait, IPlugView, IPlugViewTrait, ViewRect, kPlatformTypeNSView, kResultOk, tresult};
+use vst3::{Class, ComPtr, ComWrapper};
+
+use super::vst3::Vst3Unit;
+
+fn rect_size(r: &ViewRect) -> NSSize {
+    NSSize { w: (r.right - r.left) as f64, h: (r.bottom - r.top) as f64 }
+}
+
+/// `IPlugFrame` of a VST3 editor on macOS: resizes the holder view and the
+/// window when the plugin asks for another size.
+struct MacFrame {
+    window: AtomicUsize,
+    resizing: AtomicBool,
+}
+
+impl Class for MacFrame {
+    type Interfaces = (IPlugFrame,);
+}
+
+impl IPlugFrameTrait for MacFrame {
+    unsafe fn resizeView(&self, view: *mut IPlugView, new_size: *mut ViewRect) -> tresult {
+        let window = self.window.load(Ordering::Relaxed) as Id;
+        if window.is_null() || view.is_null() || new_size.is_null() || self.resizing.swap(true, Ordering::Relaxed) {
+            return kResultOk;
+        }
+        unsafe {
+            let size = rect_size(&*new_size);
+            if usable(size) {
+                // The holder is the window's content view: it follows.
+                send_size(window, "setContentSize:", size);
+            }
+            // The host tells the view its new size (guarded against the plugin calling back).
+            if let Some(v) = vst3::ComRef::from_raw(view) {
+                v.onSize(new_size);
+            }
+        }
+        self.resizing.store(false, Ordering::Relaxed);
+        kResultOk
+    }
+}
+
+/// A VST3 editor in its own window: a plain NSView the plugin attaches to.
+/// The window has the plugin's size and is not resizable.
+pub struct Vst3EditorWindow {
+    // Declaration order = drop order: the view goes before the unit.
+    view: ComPtr<IPlugView>,
+    frame: ComWrapper<MacFrame>,
+    window: Id,
+    holder: Id,
+    applied: NSSize,
+    _unit: Arc<Vst3Unit>,
+}
+
+// Only ever touched on the main thread; kept in Mutex-protected maps.
+unsafe impl Send for Vst3EditorWindow {}
+
+impl Vst3EditorWindow {
+    /// # Safety
+    /// Main thread only.
+    pub unsafe fn open(unit: Arc<Vst3Unit>, title: &str) -> Result<Self> {
+        unsafe {
+            let view = unit.create_view()?;
+            if view.isPlatformTypeSupported(kPlatformTypeNSView) != kResultOk {
+                bail!("this plugin's editor does not support macOS");
+            }
+            let mut r = ViewRect { left: 0, top: 0, right: 0, bottom: 0 };
+            let size = if view.getSize(&mut r) == kResultOk && usable(rect_size(&r)) { rect_size(&r) } else { FALLBACK };
+            let rect = NSRect { origin: NSPoint::default(), size };
+            let holder = send_rect(send0(class("NSView"), "alloc"), "initWithFrame:", rect);
+            // titled | closable | miniaturizable (fixed size)
+            let style: usize = 1 | 2 | 4;
+            let init: unsafe extern "C" fn(Id, Sel, NSRect, usize, usize, bool) -> Id = std::mem::transmute(objc_msgSend as unsafe extern "C" fn());
+            let window = init(send0(class("NSWindow"), "alloc"), sel("initWithContentRect:styleMask:backing:defer:"), rect, style, 2, false);
+            if window.is_null() {
+                send0(holder, "release");
+                bail!("cannot create the editor window");
+            }
+            send_bool(window, "setReleasedWhenClosed:", false);
+            let t = nsstring(title);
+            send1(window, "setTitle:", t);
+            send0(t, "release");
+            send1(window, "setContentView:", holder);
+            send0(window, "center");
+
+            let frame = ComWrapper::new(MacFrame { window: AtomicUsize::new(window as usize), resizing: AtomicBool::new(false) });
+            let frame_ptr = frame.as_com_ref::<IPlugFrame>().unwrap().as_ptr();
+            view.setFrame(frame_ptr);
+            let cleanup = |view: &ComPtr<IPlugView>| {
+                view.setFrame(std::ptr::null_mut());
+                send0(window, "close");
+                send1(window, "setContentView:", std::ptr::null_mut());
+                send0(holder, "release");
+                send0(window, "release");
+            };
+            if view.attached(holder, kPlatformTypeNSView) != kResultOk {
+                cleanup(&view);
+                bail!("the plugin refused to attach its editor");
+            }
+            send1(window, "makeKeyAndOrderFront:", std::ptr::null_mut());
+            let mut ed = Vst3EditorWindow { view, frame, window, holder, applied: size, _unit: unit };
+            ed.fit();
+            Ok(ed)
+        }
+    }
+
+    pub fn show(&mut self) {
+        unsafe { send1(self.window, "makeKeyAndOrderFront:", std::ptr::null_mut()) };
+        self.fit();
+    }
+
+    /// Follows a plugin that changed its size without asking (rare).
+    pub fn fit(&mut self) {
+        unsafe {
+            if !is_visible(self.window) {
+                return;
+            }
+            let mut r = ViewRect { left: 0, top: 0, right: 0, bottom: 0 };
+            if self.view.getSize(&mut r) == kResultOk {
+                let s = rect_size(&r);
+                if usable(s) && !same(s, self.applied) {
+                    self.applied = s;
+                    send_size(self.window, "setContentSize:", s);
+                }
+            }
+        }
+    }
+
+    /// (plugin-reported view size, window content size) — diagnostics.
+    pub fn sizes(&self) -> ((f64, f64), (f64, f64)) {
+        unsafe {
+            let mut r = ViewRect { left: 0, top: 0, right: 0, bottom: 0 };
+            self.view.getSize(&mut r);
+            let v = rect_size(&r);
+            let c = frame_of(send0(self.window, "contentView")).size;
+            ((v.w, v.h), (c.w, c.h))
+        }
+    }
+
+    /// The NSWindow pointer and whether it is on screen.
+    pub fn ns_window(&self) -> (usize, bool) {
+        (self.window as usize, unsafe { is_visible(self.window) })
+    }
+
+    pub fn close(self) {
+        unsafe {
+            self.view.removed();
+            self.view.setFrame(std::ptr::null_mut());
+            send0(self.window, "close");
+            send1(self.window, "setContentView:", std::ptr::null_mut());
+            send0(self.holder, "release");
+            send0(self.window, "release");
+        }
+        let _ = &self.frame;
+    }
+}
+
 /// Runs the main run loop for `seconds` (diagnostics / tests without Tauri).
 pub fn pump_run_loop(seconds: f64) {
     unsafe {
