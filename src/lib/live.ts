@@ -171,13 +171,17 @@ function ensureLoop() {
   const start = Math.floor(p.loop.start / bpb + 1e-6) * bpb;
   const bars = Math.round((p.loop.end - start) / bpb);
   const end = start + (bars >= 1 ? bars : 4) * bpb;
-  if (p.loop.enabled && p.loop.overdub && p.loop.start === start && p.loop.end === end) return;
-  silent((d) => {
-    d.loop.enabled = true;
-    d.loop.overdub = true;
-    d.loop.start = start;
-    d.loop.end = end;
-  });
+  if (!(p.loop.enabled && p.loop.overdub && p.loop.start === start && p.loop.end === end)) {
+    silent((d) => {
+      d.loop.enabled = true;
+      d.loop.overdub = true;
+      d.loop.start = start;
+      d.loop.end = end;
+    });
+  }
+  // The playhead belongs in the loop: the ring shows where it is in it.
+  const pos = useTransport.getState().position;
+  if (pos < start - 1e-6 || pos >= end) seek(start);
 }
 
 /** Changes the loop length; the existing loops repeat to fill a longer one. */
@@ -256,9 +260,6 @@ export async function liveRecord() {
   });
   if (useLive.getState().mode === "replace") useLive.setState((l) => ({ layers: { ...l.layers, [sel.id]: [] } }));
   take = { base, armed, held: new Map(), no: ++takeCount };
-  const p = useStore.getState().project;
-  const pos = useTransport.getState().position;
-  if (pos < p.loop.start - 1e-6 || pos >= p.loop.end) seek(p.loop.start);
   await flushSync();
   backend.record(null, null).catch((e) => {
     take = null;
