@@ -208,8 +208,10 @@ export function stop() {
   backend.stop();
   if (!t.playing && !t.recording) {
     // Stop while stopped: rewind to start (or loop start).
-    const p = useStore.getState().project;
-    seek(p.loop.enabled && t.position > p.loop.start ? p.loop.start : 0);
+    const s = useStore.getState();
+    const p = s.project;
+    // On the Loop page the playhead stays in the loop.
+    seek(p.loop.enabled && (t.position > p.loop.start || s.ui.page === "loop") ? p.loop.start : 0);
   }
 }
 

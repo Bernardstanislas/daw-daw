@@ -60,36 +60,37 @@ function useLoopPosition() {
   return step / 4;
 }
 
+/** Lamps of the loop ring: always 16, a big one every quarter of the loop. */
+const RING_LAMPS = 16;
+// Radius: the middle of the band between the dark disc (~72px) and the edge (~97px) of the ring.
+const RING_RADIUS = 84;
+const RING = Array.from({ length: RING_LAMPS }, (_, i) => {
+  const a = (i / RING_LAMPS) * Math.PI * 2 - Math.PI / 2;
+  return { left: `calc(50% + ${Math.cos(a) * RING_RADIUS}px)`, top: `calc(50% + ${Math.sin(a) * RING_RADIUS}px)` };
+});
+
 function LoopRing({ pos }: { pos: number }) {
   const project = useStore((s) => s.project);
   const recording = useTransport((s) => s.recording);
-  const { start, len, bpb } = loopInfo(project);
-  const beats = Math.round(len);
+  const playing = useTransport((s) => s.playing);
+  const pass = useLive((s) => s.pass);
+  const { start, len } = loopInfo(project);
   const rel = Math.min(len - 1e-6, Math.max(0, pos - start));
-  const now = Math.floor(rel);
-  const bar = Math.floor(rel / bpb) + 1;
-  const beat = Math.floor(rel % bpb) + 1;
-  const size = beats > 16 ? 84 : 76;
+  // A fixed ring, like on hardware: the loop length changes what a lamp is worth, never where the lamps are.
+  const now = Math.floor((rel / len) * RING_LAMPS);
+  // The position is on the top bar's display; the lamps show it in the loop, the middle counts the passes.
+  const passes = playing ? String(Math.min(99, pass + 1)) : "--";
   return (
     <div className={`loop-ring ${recording ? "rec" : ""}`}>
-      {Array.from({ length: beats }, (_, i) => {
-        const a = (i / beats) * Math.PI * 2 - Math.PI / 2;
-        return (
-          <span
-            key={i}
-            className={`lamp ${i % bpb === 0 ? "bar" : ""} ${i < now ? "lit" : ""} ${i === now ? "now" : ""}`}
-            style={{ left: `calc(50% + ${Math.cos(a) * size}px)`, top: `calc(50% + ${Math.sin(a) * size}px)` }}
-          />
-        );
-      })}
+      {RING.map(({ left, top }, i) => (
+        <span key={i} className={`lamp ${i % 4 === 0 ? "bar" : ""} ${i < now ? "lit" : ""} ${i === now ? "now" : ""}`} style={{ left, top }} />
+      ))}
       <div className="loop-ring-mid">
         <div className="lcd-digits">
-          <span className="ghost">8.8</span>
-          <span>
-            {bar}.{beat}
-          </span>
+          <span className="ghost">88</span>
+          <span>{passes.padStart(2, "!")}</span>
         </div>
-        <div className="lcd-label">bar.beat</div>
+        <div className="lcd-label">pass</div>
       </div>
     </div>
   );
