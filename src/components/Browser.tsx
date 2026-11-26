@@ -69,20 +69,8 @@ function DeviceList({ specs, filter, kind }: { specs: DeviceSpec[]; filter: stri
   const f = filter.toLowerCase();
   const selectedTrack = useStore((s) => s.selection.trackId);
   const preview = useStore((s) => s.preview);
-  const previewName = preview && (preview.preset && preview.preset !== "Default" ? preview.preset : specs.find((x) => x.typeId === preview.type)?.name);
   return (
     <>
-      {kind === "instrument" && preview && (
-        <div className="preview-banner">
-          <span className="preview-dot" />
-          <span>
-            Auditioning <b>{previewName}</b> — play your MIDI keyboard or ⌨
-          </span>
-          <button className="btn small" onClick={() => useStore.setState({ preview: null })} title="Stop auditioning">
-            Stop
-          </button>
-        </div>
-      )}
       {specs.map((spec) => {
         const presets = [{ name: "Default" }, ...spec.presets.filter((p) => p.name !== "Default")];
         const shown = presets.filter((p) => !f || p.name.toLowerCase().includes(f) || spec.name.toLowerCase().includes(f));
@@ -118,6 +106,29 @@ function DeviceList({ specs, filter, kind }: { specs: DeviceSpec[]; filter: stri
       })}
       <PluginGroup kind={kind} filter={f} />
     </>
+  );
+}
+
+/** Floats over the bottom of the browser so it never shifts the list (a shift between the
+ *  two clicks of a double-click would land the second click on another item). */
+function PreviewBanner({ specs }: { specs: DeviceSpec[] }) {
+  const preview = useStore((s) => s.preview);
+  const plugins = useCatalog((s) => s.plugins);
+  if (!preview) return null;
+  const name =
+    preview.preset && preview.preset !== "Default"
+      ? preview.preset
+      : specs.find((x) => x.typeId === preview.type)?.name ?? plugins.find((p) => p.id === preview.type)?.name ?? preview.type;
+  return (
+    <div className="preview-banner">
+      <span className="preview-dot" />
+      <span>
+        Auditioning <b>{name}</b> — play your MIDI keyboard or ⌨
+      </span>
+      <button className="btn small" onClick={() => useStore.setState({ preview: null })} title="Stop auditioning">
+        Stop
+      </button>
+    </div>
   );
 }
 
@@ -407,6 +418,7 @@ export function Browser() {
         {tab === "loops" && <Loops filter={filter} />}
         {tab === "files" && <Files filter={filter} />}
       </div>
+      {tab === "instruments" && <PreviewBanner specs={instruments} />}
     </aside>
   );
 }
